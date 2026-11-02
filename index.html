@@ -425,9 +425,10 @@ function cargar(clave){
 }
 /* ---------- notas crédito del periodo elegido (solo lectura) ---------- */
 function abrirNotas(){
-  var it=FACT.filter(function(x){return x.nc&&enRango(x)}).sort(function(a,b){return a.iso<b.iso?-1:a.iso>b.iso?1:0});
+  var rt=(st.ruta==="all"||st.ruta==="ot")?"all":st.ruta;
+  var it=FACT.filter(function(x){return x.nc&&enRango(x)&&(rt==="all"||x.r===rt)}).sort(function(a,b){return a.iso<b.iso?-1:a.iso>b.iso?1:0});
   var tot=it.reduce(function(a,x){return a+x.t},0);
-  document.getElementById("notas-sub").textContent=periodoTxt();
+  document.getElementById("notas-sub").textContent=(rt==="all"?"Todas las rutas · ":etiquetaRuta(rt)+" · ")+periodoTxt();
   var h='<div class="tot"><div class="q">Total de notas crédito</div><div class="big">-'+peso(tot)+'</div><div class="d">'+it.length+(it.length===1?' nota crédito':' notas crédito')+'</div></div>';
   var mes="",varios=it.some(function(x){return x.mes!==it[0].mes});
   it.forEach(function(x){
