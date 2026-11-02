@@ -171,16 +171,6 @@ main .wrap{gap:14px;padding-top:12px}
   <div class="cab"><div><h2>Notas crédito</h2><p id="notas-sub"></p></div><button class="cerrar" id="notas-x" aria-label="Cerrar">×</button></div>
   <div class="cuerpo" id="notas-cuerpo"></div>
 </div>
-<div class="candado" id="candado" hidden>
-  <form class="caja" id="form-codigo" autocomplete="off">
-    <div class="ico"><i></i><i></i><i></i></div>
-    <h2>Rutas</h2>
-    <p>Escriba su código de acceso. Solo lo pide una vez en este aparato.</p>
-    <input id="codigo" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="código" aria-label="Código de acceso">
-    <div class="err" id="err" role="alert"></div>
-    <button type="submit">Entrar</button>
-  </form>
-</div>
 <div class="top pad">
   <div class="wrap">
     <div class="marca"><h1>Rutas</h1><span id="corte"></span></div>
@@ -410,11 +400,6 @@ async function abrirBytes(raw,pass,iter){
 }
 function deB64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
 async function descifrar(clave){return JSON.parse(new TextDecoder().decode(await abrirBytes(deB64(CIFRADO),clave,100000)));}
-var CLAVE_CIFRADA="U2FsdGVkX1+qaamgSucf2IyCTYEnEUJPCQ9iv0o9FxMAGC/w7meNDbZ4Ldu4DrDx94Nd7if6gEWXLnGwynxT8r53R4yAt8ZmULJcNlrUMC3yDFLkw1T0vqSZmOg4v8Ew8FT94kCVCIV6BfILJhdI2g==";
-async function claveConCodigo(codigo){
-  var s=new TextDecoder().decode(await abrirBytes(deB64(CLAVE_CIFRADA),codigo,300000));
-  if(!/^2PACX-/.test(s))throw new Error("codigo");return s;
-}
 function csv(t){var rows=[],row=[],cur="",q=false;for(var i=0;i<t.length;i++){var c=t[i];
   if(q){if(c=='"'){if(t[i+1]=='"'){cur+='"';i++}else q=false}else cur+=c}
   else if(c=='"')q=true;else if(c==","){row.push(cur);cur=""}else if(c=="\n"){row.push(cur);rows.push(row);row=[];cur=""}else if(c!="\r")cur+=c}
@@ -467,32 +452,13 @@ document.getElementById("btn-notas").addEventListener("click",abrirNotas);
 document.getElementById("notas-x").addEventListener("click",cerrarNotas);
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!document.getElementById("notas").hidden)cerrarNotas()});
 
-function normaliza(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
+var CLAVE="2PACX-1vQWhhrbLmTQoOro1i6ylV40lygU6yjT3wRpdUoynspMZkuheSkrmG4OzFHsi3P5XiXDQ-r5mbbd_SvR";
 function iniciar(clave){
-  document.getElementById("candado").hidden=true;
   descifrar(clave).then(function(o){armarPagos(o);juntar();render()}).catch(function(){});
   cargar(clave).catch(function(){document.getElementById("corte").textContent="no pude leer las facturas"});
   setInterval(function(){cargar(clave).catch(function(){})},300000);
 }
-async function probar(codigo,recordar){
-  try{var c=await claveConCodigo(normaliza(codigo));if(recordar){try{localStorage.setItem("codigo",normaliza(codigo))}catch(e){}}iniciar(c);return true}
-  catch(e){return false}
-}
-function mostrarCandado(msg){var c=document.getElementById("candado");c.hidden=false;document.getElementById("err").textContent=msg||"";setTimeout(function(){document.getElementById("codigo").focus()},50)}
-document.getElementById("form-codigo").addEventListener("submit",function(e){
-  e.preventDefault();var v=document.getElementById("codigo").value;document.getElementById("err").textContent="Comprobando…";
-  probar(v,true).then(function(ok){if(!ok){document.getElementById("err").textContent="Ese código no es correcto.";document.getElementById("codigo").select()}});
-});
-
-
-
-/* arranque: código guardado, o enlace antiguo con #e=, o pedir el código */
-var guardado=null,hashClave=null;
-try{guardado=localStorage.getItem("codigo")}catch(e){}
-var hh=location.hash.match(/e=([\w\-]+)/);if(hh){hashClave=hh[1];history.replaceState(null,"",location.pathname)}
-if(hashClave)iniciar(hashClave);
-else if(guardado)probar(guardado,false).then(function(ok){if(!ok){try{localStorage.removeItem("codigo")}catch(e){}mostrarCandado("El código guardado ya no sirve. Escríbalo de nuevo.")}});
-else mostrarCandado("");
+iniciar(CLAVE);
 </script>
 </body>
 </html>
