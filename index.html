@@ -177,7 +177,6 @@ main .wrap{padding-top:16px}
     </section>
 
     <p class="nota" id="nota"></p>
-    <button class="bloquear" id="bloquear">Bloquear y olvidar el código en este aparato</button>
   </div>
 </main>
 
@@ -202,7 +201,8 @@ function mes3(k){return MESN[+k.split("-")[1]-1].slice(0,3);}
 function semDe(iso){var p=iso.split("-");return SEM[new Date(+p[0],+p[1]-1,+p[2]).getDay()];}
 function fechaCorta(iso){var p=iso.split("-");return +p[2]+" "+MESN[+p[1]-1].slice(0,3);}
 function enRango(x){return st.modo==="mes"?x.mes===st.mes:(x.iso>=st.a&&x.iso<=st.b);}
-function etiquetaRuta(k){return k==="all"?"Todas las rutas":((k==="ot"||k==="xx")?NOM[k]:k+" "+NOM[k]);}
+var DISP={"01":"001","02":"002","04":"004","05":"005"};
+function etiquetaRuta(k){return k==="all"?"Todas las rutas":((k==="ot"||k==="xx")?NOM[k]:(DISP[k]||k)+" "+NOM[k]);}
 function periodoTxt(){
   if(st.modo==="mes")return mesTxt(st.mes);
   return fechaCorta(st.a)+" "+st.a.slice(0,4)+" a "+fechaCorta(st.b)+" "+st.b.slice(0,4);
@@ -214,7 +214,7 @@ function agrupaMes(items){var g={};items.forEach(function(x){(g[x.mes]=g[x.mes]|
 
 function render(){
   if(!st.mes)return;
-  document.getElementById("corte").textContent="datos al "+CORTE;
+  document.getElementById("corte").textContent="";
   document.getElementById("main").className="pad mod-"+st.v;
 
   /* mes / fechas */
@@ -239,7 +239,7 @@ function render(){
     var val,sub;
     if(st.v==="f"){var s=sumaFact(k);val=peso(s.neto);sub=s.c+" facturas"+(s.cn?" · "+s.cn+" notas crédito":"")}
     else{var q=sumaPag(k);val=peso(q.p);sub=q.c+" pagos"}
-    h+='<button class="rc'+(k==="all"?" todas":"")+'" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="t">'+(k==="all"?"":'<span class="dot" style="background:'+COL[k]+'"></span>')+etiquetaRuta(k)+'</span><span class="v">'+val+'</span><span class="s">'+sub+'</span></button>';
+    h+='<button class="rc'+(k==="all"?" todas":"")+'" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="t">'+(k==="all"?"":'<span class="dot" style="background:'+COL[k]+'"></span>')+etiquetaRuta(k)+'</span><span class="v">'+val+'</span></button>';
   });
   document.getElementById("rutas").innerHTML=h;
 
@@ -249,15 +249,13 @@ function render(){
     var cl={};
     PAG.forEach(function(x){if((st.ruta==="all"||x.r===st.ruta)&&(enRango(x)||(st.cli===x.cli&&st.hist))){var c=cl[x.cli]||(cl[x.cli]={t:0,n:0,r:x.r});c.t+=x.t;c.n++}});
     var ks=Object.keys(cl).sort(function(a,b){return cl[b].t-cl[a].t});
-    document.getElementById("clientes").innerHTML='<button class="cb" aria-pressed="'+(!st.cli)+'" data-cli=""><b>Todos</b><span>día por día</span></button>'+
-      ks.map(function(k){return '<button class="cb" aria-pressed="'+(st.cli===k)+'" data-cli="'+k+'"><b>'+k+'</b><span>'+cl[k].n+(cl[k].n===1?" pago · ":" pagos · ")+peso(cl[k].t)+'</span></button>'}).join("");
+    document.getElementById("clientes").innerHTML='<button class="cb" aria-pressed="'+(!st.cli)+'" data-cli=""><b>Todos</b></button>'+
+      ks.map(function(k){return '<button class="cb" aria-pressed="'+(st.cli===k)+'" data-cli="'+k+'"><b>'+k+'</b><span>'+peso(cl[k].t)+'</span></button>'}).join("");
   }
 
   if(st.v==="f")vistaFacturado();else if(st.cli)vistaCliente();else vistaPagado();
 
-  document.getElementById("nota").textContent=st.v==="f"
-    ?"Facturado: facturas electrónicas de Colanta, menos las notas crédito. El día es la fecha de despacho de la factura y la ruta sale del campo «Entregado a»."
-    :"Pagado: avisos de pago de Bancolombia; la ruta es la que se marcó para cada cliente. Los pagos de abril a agosto y alguno de cada mes pueden faltar.";
+  document.getElementById("nota").textContent="";
 }
 
 function nDia(iso){return +iso.split("-")[2]}
@@ -277,8 +275,8 @@ function listaPorMes(porDia,pintaFila,valorDe){
 
 function vistaFacturado(){
   var s=sumaFact(st.ruta);
-  document.getElementById("res").innerHTML='<div class="q">Facturado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.neto)+'</div><div class="d">'+s.c+' facturas'+(s.cn?' menos '+s.cn+' notas crédito ('+peso(s.n)+')':'')+'</div>';
-  document.getElementById("tit-dias").textContent="Día por día · toque uno para ver sus facturas";
+  document.getElementById("res").innerHTML='<div class="q">Facturado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.neto)+'</div>';
+  document.getElementById("tit-dias").textContent="Toque un día para ver las facturas";
   var dias={};
   FACT.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.iso]||(dias[x.iso]={v:0,rt:{},it:[]});var t=x.nc?-x.t:x.t;o.v+=t;o.rt[x.r]=(o.rt[x.r]||0)+t;o.it.push(x)}});
   var mx=1;Object.keys(dias).forEach(function(i){mx=Math.max(mx,dias[i].v)});
@@ -302,8 +300,8 @@ function vistaFacturado(){
 
 function vistaPagado(){
   var s=sumaPag(st.ruta);
-  document.getElementById("res").innerHTML='<div class="q">Pagado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.p)+'</div><div class="d">'+s.c+' pagos de clientes</div>';
-  document.getElementById("tit-dias").textContent="Día por día · toque uno para ver quién pagó";
+  document.getElementById("res").innerHTML='<div class="q">Pagado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.p)+'</div>';
+  document.getElementById("tit-dias").textContent="Toque un día para ver quién pagó";
   var dias={};
   PAG.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.iso]||(dias[x.iso]={v:0,it:[]});o.v+=x.t;o.it.push(x)}});
   var mx=1;Object.keys(dias).forEach(function(i){mx=Math.max(mx,dias[i].v)});
@@ -317,16 +315,15 @@ function vistaPagado(){
 
 function vistaCliente(){
   var todos=PAG.filter(function(x){return x.cli===st.cli});
-  var it=todos.filter(function(x){return st.hist||enRango(x)}).sort(function(a,b){return a.iso<b.iso?1:-1});
+  var it=todos.sort(function(a,b){return a.iso<b.iso?1:-1});
   var tot=it.reduce(function(a,x){return a+x.t},0),mx=1;it.forEach(function(x){mx=Math.max(mx,x.t)});
   var r=todos.length?todos[0].r:"ot";
-  var ult=todos.length?fechaCorta(todos.slice().sort(function(a,b){return a.iso<b.iso?1:-1})[0].iso):"—";
-  document.getElementById("res").innerHTML='<div class="q">Cliente · '+etiquetaRuta(r)+' · '+(st.hist?"todos los meses":periodoTxt())+'</div><div class="nom">'+st.cli+'</div><div class="big">'+peso(tot)+'</div><div class="d">'+it.length+(it.length===1?" pago":" pagos")+' · último pago leído: '+ult+'</div>';
-  document.getElementById("tit-dias").textContent="Fechas en que pagó";
-  var g=agrupaMes(it),ms=Object.keys(g).sort().reverse(),out='<button class="link" data-hist="1">'+(st.hist?"Ver solo este periodo":"Ver todos los meses")+'</button>';
+    document.getElementById("res").innerHTML='<div class="q">Cliente · '+etiquetaRuta(r)+'</div><div class="nom">'+st.cli+'</div><div class="big">'+peso(tot)+'</div>';
+  document.getElementById("tit-dias").textContent="Cuándo pagó";
+  var g=agrupaMes(it),ms=Object.keys(g).sort().reverse(),out='';
   ms.forEach(function(m){
     var sub=g[m].reduce(function(a,x){return a+x.t},0);
-    out+='<div class="mh">'+mesTxt(m)+'<span>'+g[m].length+(g[m].length===1?" pago · ":" pagos · ")+peso(sub)+'</span></div>';
+    out+='<div class="mh">'+mesTxt(m)+'<span>'+peso(sub)+'</span></div>';
     g[m].forEach(function(x){
       out+='<div class="dia"><div class="row"><span class="n">'+nDia(x.iso)+' '+mes3(x.mes)+'<small>'+semDe(x.iso)+'</small></span><span class="bar"><i style="width:'+(x.t/mx*100)+'%;background:var(--pag)"></i></span><span class="v">'+peso(x.t)+'</span></div></div>';
     });
@@ -420,7 +417,6 @@ document.getElementById("form-codigo").addEventListener("submit",function(e){
   e.preventDefault();var v=document.getElementById("codigo").value;document.getElementById("err").textContent="Comprobando…";
   probar(v,true).then(function(ok){if(!ok){document.getElementById("err").textContent="Ese código no es correcto.";document.getElementById("codigo").select()}});
 });
-document.getElementById("bloquear").addEventListener("click",function(){try{localStorage.removeItem("codigo");localStorage.removeItem("clave")}catch(e){}location.reload()});
 
 
 
