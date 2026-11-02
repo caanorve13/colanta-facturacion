@@ -256,7 +256,7 @@ function render(){
   if(st.modo==="rango"){
     var fa=document.getElementById("fa"),fb=document.getElementById("fb");
     fa.min=fb.min=MINISO;fa.max=fb.max=MAXISO;fa.value=st.a;fb.value=st.b;
-    document.getElementById("atajos").innerHTML=MESES.slice(-3).map(function(k){return '<button data-atajo="'+k+'">'+mesTxt(k)+'</button>'}).join("")+'<button data-atajo="todo">Todo lo cargado</button>';
+    document.getElementById("atajos").innerHTML=MESES.slice(0,3).map(function(k){return '<button data-atajo="'+k+'">'+mesTxt(k)+'</button>'}).join("")+'<button data-atajo="todo">Todo lo cargado</button>';
   }
 
   /* rutas */
@@ -367,7 +367,7 @@ function vistaCliente(){
 document.addEventListener("click",function(e){
   var b=e.target.closest("[data-v],[data-mes],[data-rango],[data-atajo],[data-ruta],[data-dia],[data-cli],[data-hist]");if(!b)return;
   if(b.dataset.v){st.v=b.dataset.v;st.abierto=null;st.cli=null;st.hist=false}
-  else if(b.dataset.mes){st.modo="mes";st.mes=b.dataset.mes;st.abierto=null}
+  else if(b.dataset.mes){st.modo="mes";st.mes=b.dataset.mes;st.manual=true;st.abierto=null}
   else if(b.dataset.rango){
     if(st.modo!=="rango"){st.modo="rango";if(!st.a){var m=st.mes;st.a=m+"-01";var u=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();st.b=m+"-"+pad(u);if(st.b>MAXISO)st.b=MAXISO;if(st.a<MINISO)st.a=MINISO}}
     st.abierto=null}
@@ -408,10 +408,13 @@ function codigoRuta(s){s=(s||"").toUpperCase();if(/FILANDIA|FINLANDIA/.test(s))r
 function fecha(s){s=(s||"").trim();var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return [m[1],m[2],m[3]];
   m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return [m[3],pad(m[2]),pad(m[1])];return null;}
 function juntar(){
-  var set={},mn="",mx="";
+  var set={},mn="",mx="",con={};
+  FACT.forEach(function(x){con[x.mes]=1});
   FACT.concat(PAG).forEach(function(x){set[x.mes]=1;if(!mn||x.iso<mn)mn=x.iso;if(!mx||x.iso>mx)mx=x.iso});
-  MESES=Object.keys(set).sort();MINISO=mn;MAXISO=mx;
-  if(!st.mes||MESES.indexOf(st.mes)<0)st.mes=MESES[MESES.length-1];
+  /* los botones de mes son los meses con facturas, el más reciente primero; si aún no cargan, los de pagos */
+  MESES=Object.keys(Object.keys(con).length?con:set).sort().reverse();MINISO=mn;MAXISO=mx;
+  /* el mes más reciente queda elegido solo, mientras la persona no haya tocado otro */
+  if(!st.mes||MESES.indexOf(st.mes)<0||!st.manual)st.mes=MESES[0];
   var d=new Date();CORTE=d.getDate()+"/"+(d.getMonth()+1)+" "+pad(d.getHours())+":"+pad(d.getMinutes());
 }
 function cargar(clave){
