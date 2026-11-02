@@ -144,6 +144,26 @@ main .wrap{padding-top:16px}
 .notas .mid{display:flex;flex-direction:column;gap:2px;min-width:0}
 .notas .mid b{font-size:15px}
 .notas .mid span{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+/* versión compacta: la lista de días es una sola tarjeta con líneas finas */
+main .wrap{gap:14px;padding-top:12px}
+.marca h1{font-size:21px}
+.mes{min-height:36px;padding:6px 14px}
+.tab{padding:10px;font-size:18px}
+.rc{padding:10px 12px}
+.rc .t{font-size:19px}
+.res{padding:14px 16px}
+.res .big{font-size:clamp(30px,9vw,42px)}
+.dias{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dia{border:0;border-radius:0;border-bottom:1px solid var(--soft);background:none}
+.dia:last-child{border-bottom:0}
+.dia>button,.dia>.row{padding:9px 14px;gap:10px;grid-template-columns:64px 1fr auto}
+.dia .n{font-size:16px}
+.dia .n small{display:inline;margin:0 0 0 5px;font-size:11px}
+.bar{height:8px;border-radius:4px}
+.dias .mh{margin:0;padding:10px 14px 6px;background:var(--bg);border-bottom:1px solid var(--soft)}
+.det{border-top:1px solid var(--soft)}
+.notas .dia{border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 </style>
 </head>
 <body>
@@ -154,7 +174,7 @@ main .wrap{padding-top:16px}
 <div class="candado" id="candado" hidden>
   <form class="caja" id="form-codigo" autocomplete="off">
     <div class="ico"><i></i><i></i><i></i></div>
-    <h2>Colanta por ruta</h2>
+    <h2>Rutas</h2>
     <p>Escriba su código de acceso. Solo lo pide una vez en este aparato.</p>
     <input id="codigo" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="código" aria-label="Código de acceso">
     <div class="err" id="err" role="alert"></div>
@@ -163,7 +183,7 @@ main .wrap{padding-top:16px}
 </div>
 <div class="top pad">
   <div class="wrap">
-    <div class="marca"><h1>Colanta por ruta</h1><span id="corte"></span></div>
+    <div class="marca"><h1>Rutas</h1><span id="corte"></span></div>
     <div class="meses" id="meses" role="group" aria-label="Mes"></div>
     <div class="tabs" id="tabs"></div>
   </div>
@@ -181,7 +201,6 @@ main .wrap{padding-top:16px}
     </section>
 
     <section id="bloque-ruta">
-      <span class="lbl">Ruta</span>
       <div class="rutas" id="rutas"></div>
     </section>
 
