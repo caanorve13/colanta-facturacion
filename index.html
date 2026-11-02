@@ -275,7 +275,7 @@ function listaPorMes(porDia,pintaFila,valorDe){
 
 function vistaFacturado(){
   var s=sumaFact(st.ruta);
-  document.getElementById("res").innerHTML='<div class="q">Facturado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.neto)+'</div>';
+  document.getElementById("res").innerHTML='<div class="q">Facturado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.neto)+'</div><div class="d">'+s.c+(s.c===1?' factura':' facturas')+(s.cn?' menos '+s.cn+(s.cn===1?' nota crédito':' notas crédito')+' ('+peso(s.n)+')':'')+'</div>';
   document.getElementById("tit-dias").textContent="Toque un día para ver las facturas";
   var dias={};
   FACT.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.iso]||(dias[x.iso]={v:0,rt:{},it:[]});var t=x.nc?-x.t:x.t;o.v+=t;o.rt[x.r]=(o.rt[x.r]||0)+t;o.it.push(x)}});
@@ -300,7 +300,7 @@ function vistaFacturado(){
 
 function vistaPagado(){
   var s=sumaPag(st.ruta);
-  document.getElementById("res").innerHTML='<div class="q">Pagado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.p)+'</div>';
+  document.getElementById("res").innerHTML='<div class="q">Pagado · '+etiquetaRuta(st.ruta)+' · '+periodoTxt()+'</div><div class="big">'+peso(s.p)+'</div><div class="d">'+s.c+(s.c===1?' pago':' pagos')+' de clientes</div>';
   document.getElementById("tit-dias").textContent="Toque un día para ver quién pagó";
   var dias={};
   PAG.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.iso]||(dias[x.iso]={v:0,it:[]});o.v+=x.t;o.it.push(x)}});
