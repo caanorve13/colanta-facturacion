@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F4F6">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Colanta">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>Colanta por ruta</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
@@ -107,9 +113,33 @@ main .wrap{padding-top:16px}
 .vacio{color:var(--muted);padding:18px 2px;text-align:center}
 .link{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;align-self:flex-start}
 .nota{font-size:12.5px;color:var(--muted)}
+
+/* pantalla de código de acceso */
+.candado{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.candado[hidden]{display:none}
+.candado .caja{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.candado .ico{width:76px;height:76px;border-radius:20px;margin:0 auto;background:#14212B;display:flex;align-items:flex-end;justify-content:center;gap:7px;padding:18px 0}
+.candado .ico i{width:11px;border-radius:3px;background:#fff;display:block}
+.candado .ico i:nth-child(1){height:18px}.candado .ico i:nth-child(2){height:28px}.candado .ico i:nth-child(3){height:40px;background:#2FB583}
+.candado h2{font-family:var(--display);font-weight:700;font-size:26px;margin:0}
+.candado p{color:var(--muted);margin:0;font-size:14px}
+.candado input{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;font-size:20px;text-align:center;letter-spacing:.12em;color:var(--ink);width:100%;text-transform:lowercase}
+.candado button{border:0;background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:14px;font-family:var(--display);font-weight:700;font-size:18px}
+.candado .err{color:var(--bad);font-size:14px;min-height:20px}
+.bloquear{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:6px 0;align-self:flex-start}
 </style>
 </head>
 <body>
+<div class="candado" id="candado" hidden>
+  <form class="caja" id="form-codigo" autocomplete="off">
+    <div class="ico"><i></i><i></i><i></i></div>
+    <h2>Colanta por ruta</h2>
+    <p>Escriba su código de acceso. Solo lo pide una vez en este aparato.</p>
+    <input id="codigo" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="código" aria-label="Código de acceso">
+    <div class="err" id="err" role="alert"></div>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
 <div class="top pad">
   <div class="wrap">
     <div class="marca"><h1>Colanta por ruta</h1><span id="corte"></span></div>
@@ -147,6 +177,7 @@ main .wrap{padding-top:16px}
     </section>
 
     <p class="nota" id="nota"></p>
+    <button class="bloquear" id="bloquear">Bloquear y olvidar el código en este aparato</button>
   </div>
 </main>
 
@@ -332,14 +363,19 @@ document.addEventListener("change",function(e){
 /* ---------- datos ---------- */
 function armarPagos(o){var mapa=o.mapa||{};PAG=[];o.pagos.split("|").forEach(function(s){var p=s.split(",");var f=p[0].split("/");var r=mapa[p[1]];if(!r)return;
   var mes="2026-"+pad(f[1]);PAG.push({mes:mes,d:+f[0],iso:mes+"-"+pad(f[0]),r:r==="ot"?"ot":r,cli:p[1],t:+p[2]});});}
-async function descifrar(clave){
-  var raw=Uint8Array.from(atob(CIFRADO),function(c){return c.charCodeAt(0)});
+async function abrirBytes(raw,pass,iter){
   var salt=raw.slice(8,16),data=raw.slice(16);
-  var base=await crypto.subtle.importKey("raw",new TextEncoder().encode(clave),"PBKDF2",false,["deriveBits"]);
-  var bits=new Uint8Array(await crypto.subtle.deriveBits({name:"PBKDF2",salt:salt,iterations:100000,hash:"SHA-256"},base,384));
+  var base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveBits"]);
+  var bits=new Uint8Array(await crypto.subtle.deriveBits({name:"PBKDF2",salt:salt,iterations:iter,hash:"SHA-256"},base,384));
   var key=await crypto.subtle.importKey("raw",bits.slice(0,32),"AES-CBC",false,["decrypt"]);
-  var pt=await crypto.subtle.decrypt({name:"AES-CBC",iv:bits.slice(32,48)},key,data);
-  return JSON.parse(new TextDecoder().decode(pt));
+  return new Uint8Array(await crypto.subtle.decrypt({name:"AES-CBC",iv:bits.slice(32,48)},key,data));
+}
+function deB64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
+async function descifrar(clave){return JSON.parse(new TextDecoder().decode(await abrirBytes(deB64(CIFRADO),clave,100000)));}
+var CLAVE_CIFRADA="U2FsdGVkX1+qaamgSucf2IyCTYEnEUJPCQ9iv0o9FxMAGC/w7meNDbZ4Ldu4DrDx94Nd7if6gEWXLnGwynxT8r53R4yAt8ZmULJcNlrUMC3yDFLkw1T0vqSZmOg4v8Ew8FT94kCVCIV6BfILJhdI2g==";
+async function claveConCodigo(codigo){
+  var s=new TextDecoder().decode(await abrirBytes(deB64(CLAVE_CIFRADA),codigo,300000));
+  if(!/^2PACX-/.test(s))throw new Error("codigo");return s;
 }
 function csv(t){var rows=[],row=[],cur="",q=false;for(var i=0;i<t.length;i++){var c=t[i];
   if(q){if(c=='"'){if(t[i+1]=='"'){cur+='"';i++}else q=false}else cur+=c}
@@ -368,12 +404,33 @@ function cargar(clave){
     juntar();render();
   });
 }
-var clave=null;
-try{var h=location.hash.match(/e=([\w\-]+)/);if(h){clave=h[1];localStorage.setItem("clave",clave);history.replaceState(null,"",location.pathname)}else clave=localStorage.getItem("clave")}catch(e){var h2=location.hash.match(/e=([\w\-]+)/);if(h2)clave=h2[1]}
-if(!clave){document.getElementById("corte").textContent="abra el enlace completo"}
-else{descifrar(clave).then(function(o){armarPagos(o);juntar();render()}).catch(function(){});
+function normaliza(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
+function iniciar(clave){
+  document.getElementById("candado").hidden=true;
+  descifrar(clave).then(function(o){armarPagos(o);juntar();render()}).catch(function(){});
   cargar(clave).catch(function(){document.getElementById("corte").textContent="no pude leer las facturas"});
-  setInterval(function(){cargar(clave).catch(function(){})},300000);}
+  setInterval(function(){cargar(clave).catch(function(){})},300000);
+}
+async function probar(codigo,recordar){
+  try{var c=await claveConCodigo(normaliza(codigo));if(recordar){try{localStorage.setItem("codigo",normaliza(codigo))}catch(e){}}iniciar(c);return true}
+  catch(e){return false}
+}
+function mostrarCandado(msg){var c=document.getElementById("candado");c.hidden=false;document.getElementById("err").textContent=msg||"";setTimeout(function(){document.getElementById("codigo").focus()},50)}
+document.getElementById("form-codigo").addEventListener("submit",function(e){
+  e.preventDefault();var v=document.getElementById("codigo").value;document.getElementById("err").textContent="Comprobando…";
+  probar(v,true).then(function(ok){if(!ok){document.getElementById("err").textContent="Ese código no es correcto.";document.getElementById("codigo").select()}});
+});
+document.getElementById("bloquear").addEventListener("click",function(){try{localStorage.removeItem("codigo");localStorage.removeItem("clave")}catch(e){}location.reload()});
+
+
+
+/* arranque: código guardado, o enlace antiguo con #e=, o pedir el código */
+var guardado=null,hashClave=null;
+try{guardado=localStorage.getItem("codigo")}catch(e){}
+var hh=location.hash.match(/e=([\w\-]+)/);if(hh){hashClave=hh[1];history.replaceState(null,"",location.pathname)}
+if(hashClave)iniciar(hashClave);
+else if(guardado)probar(guardado,false).then(function(ok){if(!ok){try{localStorage.removeItem("codigo")}catch(e){}mostrarCandado("El código guardado ya no sirve. Escríbalo de nuevo.")}});
+else mostrarCandado("");
 </script>
 </body>
 </html>
