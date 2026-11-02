@@ -127,9 +127,30 @@ main .wrap{padding-top:16px}
 .candado button{border:0;background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:14px;font-family:var(--display);font-weight:700;font-size:18px}
 .candado .err{color:var(--bad);font-size:14px;min-height:20px}
 .bloquear{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:6px 0;align-self:flex-start}
+
+/* notas crédito: vista de solo lectura */
+.btn-notas{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;font-family:var(--display);font-weight:700;font-size:18px;width:100%;margin-top:6px}
+.notas{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.notas[hidden]{display:none}
+.notas .cab{max-width:680px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.notas h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.05;margin:0}
+.notas .cab p{margin:4px 0 0;color:var(--muted);font-size:15px;text-transform:capitalize}
+.cerrar{width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:28px;line-height:1;flex:none;display:flex;align-items:center;justify-content:center}
+.notas .cuerpo{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.notas .tot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.notas .tot .q{color:var(--muted);font-size:14px}
+.notas .tot .big{font-family:var(--display);font-weight:700;font-size:clamp(32px,9vw,46px);line-height:1.05;margin:2px 0;color:var(--bad);font-variant-numeric:tabular-nums}
+.notas .tot .d{color:var(--muted);font-size:14px}
+.notas .mid{display:flex;flex-direction:column;gap:2px;min-width:0}
+.notas .mid b{font-size:15px}
+.notas .mid span{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
 </style>
 </head>
 <body>
+<div class="notas" id="notas" hidden role="dialog" aria-label="Notas crédito">
+  <div class="cab"><div><h2>Notas crédito</h2><p id="notas-sub"></p></div><button class="cerrar" id="notas-x" aria-label="Cerrar">×</button></div>
+  <div class="cuerpo" id="notas-cuerpo"></div>
+</div>
 <div class="candado" id="candado" hidden>
   <form class="caja" id="form-codigo" autocomplete="off">
     <div class="ico"><i></i><i></i><i></i></div>
@@ -177,6 +198,7 @@ main .wrap{padding-top:16px}
     </section>
 
     <p class="nota" id="nota"></p>
+    <button class="btn-notas" id="btn-notas">Notas crédito</button>
   </div>
 </main>
 
@@ -401,6 +423,28 @@ function cargar(clave){
     juntar();render();
   });
 }
+/* ---------- notas crédito del periodo elegido (solo lectura) ---------- */
+function abrirNotas(){
+  var it=FACT.filter(function(x){return x.nc&&enRango(x)}).sort(function(a,b){return a.iso<b.iso?-1:a.iso>b.iso?1:0});
+  var tot=it.reduce(function(a,x){return a+x.t},0);
+  document.getElementById("notas-sub").textContent=periodoTxt();
+  var h='<div class="tot"><div class="q">Total de notas crédito</div><div class="big">-'+peso(tot)+'</div><div class="d">'+it.length+(it.length===1?' nota crédito':' notas crédito')+'</div></div>';
+  var mes="",varios=it.some(function(x){return x.mes!==it[0].mes});
+  it.forEach(function(x){
+    if(varios&&x.mes!==mes){mes=x.mes;var sub=it.filter(function(y){return y.mes===mes}).reduce(function(a,y){return a+y.t},0);h+='<div class="mh">'+mesTxt(mes)+'<span>-'+peso(sub)+'</span></div>'}
+    h+='<div class="dia"><div class="row"><span class="n">'+nDia(x.iso)+' '+mes3(x.mes)+'<small>'+semDe(x.iso)+'</small></span>'+
+       '<span class="mid"><b>Nota '+x.n+'</b><span><span class="dot2" style="background:'+COL[x.r]+'"></span>'+etiquetaRuta(x.r)+'</span></span>'+
+       '<span class="v neg">-'+peso(x.t)+'</span></div></div>';
+  });
+  if(!it.length)h+='<p class="vacio">No hay notas crédito en este periodo.</p>';
+  document.getElementById("notas-cuerpo").innerHTML=h;
+  var n=document.getElementById("notas");n.hidden=false;n.scrollTop=0;document.body.style.overflow="hidden";
+}
+function cerrarNotas(){document.getElementById("notas").hidden=true;document.body.style.overflow=""}
+document.getElementById("btn-notas").addEventListener("click",abrirNotas);
+document.getElementById("notas-x").addEventListener("click",cerrarNotas);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!document.getElementById("notas").hidden)cerrarNotas()});
+
 function normaliza(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
 function iniciar(clave){
   document.getElementById("candado").hidden=true;
