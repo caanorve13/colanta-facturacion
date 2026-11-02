@@ -430,17 +430,16 @@ function abrirNotas(){
   var tot=it.reduce(function(a,x){return a+x.t},0);
   document.getElementById("notas-sub").textContent=(rt==="all"?"Todas las rutas · ":etiquetaRuta(rt)+" · ")+periodoTxt();
   var h='<div class="tot"><div class="q">Total de notas crédito</div><div class="big">-'+peso(tot)+'</div><div class="d">'+it.length+(it.length===1?' nota crédito':' notas crédito')+'</div></div>';
-  ["01","04","02","05","xx"].forEach(function(k){
-    var g=it.filter(function(x){return x.r===k});if(!g.length)return;
-    var sub=g.reduce(function(a,x){return a+x.t},0);
-    h+='<div class="mh" style="text-transform:none"><span style="display:inline-flex;align-items:center;gap:10px;color:var(--ink);font-family:var(--display);font-size:20px;font-weight:700"><span class="dot2" style="background:'+COL[k]+';width:14px;height:14px"></span>'+etiquetaRuta(k)+'</span><span>'+g.length+(g.length===1?' nota · ':' notas · ')+'-'+peso(sub)+'</span></div>';
-    g.forEach(function(x){
-      h+='<div class="dia"><div class="row"><span class="n">'+nDia(x.iso)+' '+mes3(x.mes)+'<small>'+semDe(x.iso)+'</small></span>'+
-         '<span class="mid"><b>Nota '+x.n+'</b></span>'+
-         '<span class="v neg">-'+peso(x.t)+'</span></div></div>';
+  if(it.length){
+    h+='<div class="dia"><div class="det" style="border-top:0">';
+    ["01","04","02","05","xx"].forEach(function(k){
+      var g=it.filter(function(x){return x.r===k});if(!g.length)return;
+      var sub=g.reduce(function(a,x){return a+x.t},0);
+      h+='<div><h3><span class="t"><span class="dot2" style="background:'+COL[k]+'"></span>'+etiquetaRuta(k)+'</span><span>-'+peso(sub)+'</span></h3>'+
+        g.map(function(x){return '<div class="li"><span class="nc">'+nDia(x.iso)+' '+mes3(x.mes)+' · Nota '+x.n+'</span><span class="nc">-'+peso(x.t)+'</span></div>'}).join("")+'</div>';
     });
-  });
-  if(!it.length)h+='<p class="vacio">No hay notas crédito en este periodo.</p>';
+    h+='</div></div>';
+  }else h+='<p class="vacio">No hay notas crédito en este periodo.</p>';
   document.getElementById("notas-cuerpo").innerHTML=h;
   var n=document.getElementById("notas");n.hidden=false;n.scrollTop=0;document.body.style.overflow="hidden";
 }
