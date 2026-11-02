@@ -134,7 +134,7 @@ main .wrap{padding-top:16px}
 .notas[hidden]{display:none}
 .notas .cab{max-width:680px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .notas h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.05;margin:0}
-.notas .cab p{margin:4px 0 0;color:var(--muted);font-size:15px;text-transform:capitalize}
+.notas .cab p{margin:4px 0 0;color:var(--muted);font-size:15px}
 .cerrar{width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:28px;line-height:1;flex:none;display:flex;align-items:center;justify-content:center}
 .notas .cuerpo{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .notas .tot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
@@ -430,12 +430,15 @@ function abrirNotas(){
   var tot=it.reduce(function(a,x){return a+x.t},0);
   document.getElementById("notas-sub").textContent=(rt==="all"?"Todas las rutas · ":etiquetaRuta(rt)+" · ")+periodoTxt();
   var h='<div class="tot"><div class="q">Total de notas crédito</div><div class="big">-'+peso(tot)+'</div><div class="d">'+it.length+(it.length===1?' nota crédito':' notas crédito')+'</div></div>';
-  var mes="",varios=it.some(function(x){return x.mes!==it[0].mes});
-  it.forEach(function(x){
-    if(varios&&x.mes!==mes){mes=x.mes;var sub=it.filter(function(y){return y.mes===mes}).reduce(function(a,y){return a+y.t},0);h+='<div class="mh">'+mesTxt(mes)+'<span>-'+peso(sub)+'</span></div>'}
-    h+='<div class="dia"><div class="row"><span class="n">'+nDia(x.iso)+' '+mes3(x.mes)+'<small>'+semDe(x.iso)+'</small></span>'+
-       '<span class="mid"><b>Nota '+x.n+'</b><span><span class="dot2" style="background:'+COL[x.r]+'"></span>'+etiquetaRuta(x.r)+'</span></span>'+
-       '<span class="v neg">-'+peso(x.t)+'</span></div></div>';
+  ["01","04","02","05","xx"].forEach(function(k){
+    var g=it.filter(function(x){return x.r===k});if(!g.length)return;
+    var sub=g.reduce(function(a,x){return a+x.t},0);
+    h+='<div class="mh" style="text-transform:none"><span style="display:inline-flex;align-items:center;gap:10px;color:var(--ink);font-family:var(--display);font-size:20px;font-weight:700"><span class="dot2" style="background:'+COL[k]+';width:14px;height:14px"></span>'+etiquetaRuta(k)+'</span><span>'+g.length+(g.length===1?' nota · ':' notas · ')+'-'+peso(sub)+'</span></div>';
+    g.forEach(function(x){
+      h+='<div class="dia"><div class="row"><span class="n">'+nDia(x.iso)+' '+mes3(x.mes)+'<small>'+semDe(x.iso)+'</small></span>'+
+         '<span class="mid"><b>Nota '+x.n+'</b></span>'+
+         '<span class="v neg">-'+peso(x.t)+'</span></div></div>';
+    });
   });
   if(!it.length)h+='<p class="vacio">No hay notas crédito en este periodo.</p>';
   document.getElementById("notas-cuerpo").innerHTML=h;
