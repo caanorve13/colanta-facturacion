@@ -8,7 +8,7 @@
 <title>Colanta por ruta</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Concepto: una tarjeta por ruta que junta lo facturado y lo pagado; debajo, cada día con sus dos barras. */
+/* Concepto: dos vistas separadas, Facturado y Pagado. En cada una se elige la ruta; en Pagado además el cliente. */
 :root{
   --bg:#F2F4F6; --surface:#FFFFFF; --ink:#14212B; --muted:#5A6B78; --line:#DCE2E7; --soft:#E8EDF1;
   --accent:#14212B; --accent-ink:#FFFFFF; --bad:#B4322A; --fact:#14212B; --pag:#1E7F5C;
@@ -26,65 +26,67 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;
-  padding-block:calc(18px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));
+  padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-h1{font-family:var(--display);font-size:30px;line-height:1.05;margin:0}
+h1{font-family:var(--display);font-size:28px;line-height:1.05;margin:0}
 .sub{color:var(--muted);margin:4px 0 0;font-size:14px}
 .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;display:block}
 .fb{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;min-height:40px}
 .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 
-/* tarjetas de ruta */
+/* pestañas grandes */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:4px 0}
+.tab{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 10px;font-family:var(--display);font-weight:700;font-size:20px;text-align:center}
+.tab[aria-pressed="true"]{color:#fff;border-color:transparent}
+.tab[data-v="f"][aria-pressed="true"]{background:var(--fact);color:var(--accent-ink)}
+.tab[data-v="p"][aria-pressed="true"]{background:var(--pag);color:#fff}
+
+/* rutas */
 .rutas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.rc{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rc{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .rc.todas{grid-column:1/-1}
 .rc[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .rc .t{display:flex;align-items:center;gap:8px;font-weight:600}
 .rc .dot{width:12px;height:12px;border-radius:50%;flex:none}
-.rc .m{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.rc .m b{color:var(--ink);font-size:15px;font-weight:600;display:block}
-.rc .m .p b{color:var(--pag)}
+.rc .v{font-family:var(--display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.rc .s{font-size:12px;color:var(--muted)}
+
+/* clientes */
+.cl{display:flex;flex-wrap:wrap;gap:8px}
+.cb{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px;text-align:left;min-width:0}
+.cb b{display:block;font-size:14px}
+.cb span{font-size:12px;color:var(--muted)}
+.cb[aria-pressed="true"]{border-color:var(--pag);box-shadow:inset 0 0 0 1px var(--pag)}
 
 /* resumen */
-.res{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.res h2{font-family:var(--display);font-size:20px;margin:0}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px}
-.tile .k{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.tile .k i{width:10px;height:10px;border-radius:3px;display:inline-block}
-.tile .v{font-family:var(--display);font-weight:700;font-size:clamp(22px,6.5vw,30px);line-height:1.1;font-variant-numeric:tabular-nums}
-.tile .s{font-size:12px;color:var(--muted)}
-.dif{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding-top:10px;font-size:14px;color:var(--muted)}
-.dif b{font-family:var(--display);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.res{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.res .q{color:var(--muted);font-size:14px}
+.res .big{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,52px);line-height:1.05;margin:2px 0;font-variant-numeric:tabular-nums}
+.res .d{color:var(--muted);font-size:14px}
+.big.p{color:var(--pag)}
+.pend{color:var(--bad);font-weight:600}
 
 /* días */
 .dias{display:flex;flex-direction:column;gap:8px}
 .dia{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.dia>button{width:100%;text-align:left;background:none;border:0;padding:10px 14px;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px}
+.dia>button{width:100%;text-align:left;background:none;border:0;padding:12px 14px;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px}
+.dia>div.row{padding:12px 14px;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px}
 .dia .n{font-weight:600}
 .dia .n small{display:block;font-weight:400;color:var(--muted);font-size:11px;text-transform:uppercase}
-.bars{display:flex;flex-direction:column;gap:5px}
-.bar{height:9px;border-radius:5px;background:var(--soft);overflow:hidden}
-.bar i{display:block;height:100%;border-radius:5px}
-.bar.f i{background:var(--fact)}
-.bar.p i{background:var(--pag)}
-.vals{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.5}
-.vals .f{color:var(--ink)}
-.vals .p{color:var(--pag);font-weight:600}
-.vals .neg{color:var(--bad)}
+.bar{height:12px;border-radius:6px;background:var(--soft);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.dia .v{font-weight:600;font-variant-numeric:tabular-nums}
+.dia .v.neg{color:var(--bad)}
 .det{border-top:1px solid var(--line);padding:10px 14px 12px;background:var(--bg);display:flex;flex-direction:column;gap:12px}
-.det h3{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.det h3{margin:0 0 4px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.det h3 .t{display:inline-flex;align-items:center;gap:8px}
+.dot2{width:10px;height:10px;border-radius:50%;display:inline-block}
 .li{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0;border-bottom:1px dotted var(--line);font-variant-numeric:tabular-nums}
 .li .nc{color:var(--bad)}
-.li .r{display:inline-flex;align-items:center;gap:6px}
-.li .r i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.pend{color:var(--bad);font-weight:600}
-.leg{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
-.leg i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px}
 .vacio{color:var(--muted);padding:14px 2px}
 .nota{font-size:12.5px;color:var(--muted)}
 </style>
@@ -96,27 +98,33 @@ h1{font-family:var(--display);font-size:30px;line-height:1.05;margin:0}
     <p class="sub" id="sub">Cargando datos…</p>
   </header>
 
+  <div class="tabs" id="tabs"></div>
+
   <section id="bloque-mes">
     <span class="lbl">Mes</span>
     <div class="fb" id="meses"></div>
   </section>
 
   <section>
-    <span class="lbl">1. Ruta</span>
-    <div class="rutas" id="rutas"></div>
+    <span class="lbl">Periodo</span>
+    <div class="fb" id="periodos"></div>
   </section>
 
   <section>
-    <span class="lbl">2. Periodo</span>
-    <div class="fb" id="periodos"></div>
+    <span class="lbl">Ruta</span>
+    <div class="rutas" id="rutas"></div>
+  </section>
+
+  <section id="bloque-cli" hidden>
+    <span class="lbl">Cliente</span>
+    <div class="cl" id="clientes"></div>
   </section>
 
   <section class="res" id="res" aria-live="polite"></section>
 
   <section>
-    <span class="lbl">3. Día por día (toque uno para ver el detalle)</span>
-    <div class="leg"><span><i style="background:var(--fact)"></i>Facturado</span><span><i style="background:var(--pag)"></i>Pagado</span></div>
-    <div class="dias" id="dias" style="margin-top:8px"></div>
+    <span class="lbl" id="tit-dias"></span>
+    <div class="dias" id="dias"></div>
   </section>
 
   <p class="nota" id="nota"></p>
@@ -128,13 +136,137 @@ var CIFRADO="U2FsdGVkX1+WG2wk7J2/VYmRrFrNYwKRcqMQh3TueWtvTsFZqa6Sp6HelgDXHhM4A9v
 
 var NOM={"01":"Filandia","02":"Salento","04":"Popular","05":"Centro","xx":"Sin ruta","pe":"Pendiente","ot":"Otro"};
 var COL={"01":"var(--r01)","02":"var(--r02)","04":"var(--r04)","05":"var(--r05)","xx":"var(--rpe)","pe":"var(--rpe)","ot":"var(--rot)"};
-var RUTAS4=["01","02","04","05"];
 var SEM=["dom","lun","mar","mié","jue","vie","sáb"];
 var MESN=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 var PER=[["Todo el mes",1,31],["Días 1 a 10",1,10],["Días 11 a 20",11,20],["Días 21 a 31",21,31]];
 
 var FACT=[];   /* facturas: {mes,d,r,nc,n,t} */
-var PAG=[];
+var PAG=[];    /* pagos: {mes,d,r,cli,t} */
+var MESES=[],CORTE="";
+var st={v:"f",mes:null,ruta:"all",per:0,cli:null,abierto:null};
+
+function peso(n){return (n<0?"-":"")+"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");}
+function nombreMes(k){var p=k.split("-");return MESN[+p[1]-1]+" "+p[0];}
+function semDe(mes,d){var p=mes.split("-");return SEM[new Date(+p[0],+p[1]-1,d).getDay()];}
+function rangoOk(x){var p=PER[st.per];return x.mes===st.mes&&x.d>=p[1]&&x.d<=p[2];}
+function etiquetaRuta(k){return k==="all"?"Todas las rutas":((k==="pe"||k==="ot"||k==="xx")?NOM[k]:k+" "+NOM[k]);}
+
+function sumaFact(ruta){var f=0,n=0,c=0,cn=0;FACT.forEach(function(x){if(rangoOk(x)&&(ruta==="all"||x.r===ruta)){if(x.nc){n+=x.t;cn++}else{f+=x.t;c++}}});return {f:f,n:n,c:c,cn:cn,neto:f-n};}
+function sumaPag(ruta){var p=0,c=0;PAG.forEach(function(x){if(rangoOk(x)&&(ruta==="all"||x.r===ruta)){p+=x.t;c++}});return {p:p,c:c};}
+
+function render(){
+  if(!st.mes)return;
+  var cab=nombreMes(st.mes);
+  document.getElementById("sub").textContent=cab.charAt(0).toUpperCase()+cab.slice(1)+" · datos al "+CORTE;
+  document.getElementById("tabs").innerHTML='<button class="tab" data-v="f" aria-pressed="'+(st.v==="f")+'">Facturado</button><button class="tab" data-v="p" aria-pressed="'+(st.v==="p")+'">Pagado</button>';
+  var verCli=st.v==="p"&&st.cli;
+  document.getElementById("bloque-mes").hidden=MESES.length<2||verCli;
+  document.getElementById("meses").innerHTML=MESES.map(function(k){return '<button class="btn" aria-pressed="'+(st.mes===k)+'" data-mes="'+k+'">'+nombreMes(k)+'</button>'}).join("");
+  document.getElementById("periodos").parentNode.hidden=!!verCli;
+  document.getElementById("periodos").innerHTML=PER.map(function(p,i){return '<button class="btn" aria-pressed="'+(st.per===i)+'" data-per="'+i+'">'+p[0]+'</button>'}).join("");
+
+  /* tarjetas de ruta */
+  var rutas=["01","02","04","05"];
+  if(st.v==="p"){if(PAG.some(function(x){return x.r==="pe"}))rutas.push("pe");if(PAG.some(function(x){return x.r==="ot"}))rutas.push("ot");}
+  else if(FACT.some(function(x){return x.r==="xx"}))rutas.push("xx");
+  var h="";
+  [].concat("all",rutas).forEach(function(k){
+    var val,sub;
+    if(st.v==="f"){var s=sumaFact(k);val=peso(s.neto);sub=s.c+" facturas"+(s.cn?" · "+s.cn+" notas crédito":"")}
+    else{var q=sumaPag(k);val=peso(q.p);sub=q.c+" pagos"}
+    h+='<button class="rc'+(k==="all"?" todas":"")+'" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="t">'+(k==="all"?"":'<span class="dot" style="background:'+COL[k]+'"></span>')+etiquetaRuta(k)+'</span><span class="v"'+(st.v==="p"?' style="color:var(--pag)"':'')+'>'+val+'</span><span class="s">'+sub+'</span></button>';
+  });
+  document.getElementById("rutas").innerHTML=h;
+
+  /* clientes (solo en Pagado) */
+  var bc=document.getElementById("bloque-cli");bc.hidden=st.v!=="p";
+  if(st.v==="p"){
+    var cl={};
+    PAG.forEach(function(x){if(st.ruta==="all"||x.r===st.ruta){var c=cl[x.cli]||(cl[x.cli]={t:0,n:0,r:x.r});c.t+=x.t;c.n++}});
+    var ks=Object.keys(cl).sort(function(a,b){return cl[b].t-cl[a].t});
+    document.getElementById("clientes").innerHTML='<button class="cb" aria-pressed="'+(!st.cli)+'" data-cli=""><b>Todos</b><span>ver por día</span></button>'+
+      ks.map(function(k){return '<button class="cb" aria-pressed="'+(st.cli===k)+'" data-cli="'+k+'"><b>'+k+'</b><span>'+cl[k].n+' pagos · '+peso(cl[k].t)+'</span></button>'}).join("");
+  }
+
+  if(st.v==="f")vistaFacturado();else if(st.cli)vistaCliente();else vistaPagado();
+
+  var pe2={};PAG.forEach(function(x){if(x.r==="pe")pe2[x.cli]=1});
+  document.getElementById("nota").textContent=st.v==="f"
+    ?"Facturado: facturas electrónicas de Colanta recibidas en el correo, menos las notas crédito. La ruta sale del campo «Entregado a»."
+    :"Pagado: avisos de pago de Bancolombia; la ruta es la que se marcó para cada cliente"+(Object.keys(pe2).length?" (sin ruta: "+Object.keys(pe2).join(", ")+")":"")+". Los pagos de abril a agosto y alguno de cada mes pueden faltar.";
+}
+
+function filaDia(d,mes,barra,valor,neg,abierto,detalle){
+  return '<div class="dia"><button data-dia="'+d+'" aria-expanded="'+abierto+'"><span class="n">'+d+'<small>'+semDe(mes,d)+'</small></span><span class="bar">'+barra+'</span><span class="v'+(neg?" neg":"")+'">'+valor+'</span></button>'+(abierto?detalle:"")+'</div>';
+}
+
+function vistaFacturado(){
+  var s=sumaFact(st.ruta);
+  document.getElementById("res").innerHTML='<div class="q">Facturado · '+etiquetaRuta(st.ruta)+' · '+PER[st.per][0].toLowerCase()+'</div><div class="big">'+peso(s.neto)+'</div><div class="d">'+s.c+' facturas'+(s.cn?' menos '+s.cn+' notas crédito ('+peso(s.n)+')':'')+'</div>';
+  document.getElementById("tit-dias").textContent="Día por día · toque uno para ver sus facturas";
+  var dias={};
+  FACT.forEach(function(x){if(rangoOk(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={v:0,rt:{},it:[]});var t=x.nc?-x.t:x.t;o.v+=t;o.rt[x.r]=(o.rt[x.r]||0)+t;o.it.push(x)}});
+  var lista=Object.keys(dias).map(Number).sort(function(a,b){return a-b}),mx=1;
+  lista.forEach(function(d){mx=Math.max(mx,dias[d].v)});
+  var out="";
+  lista.forEach(function(d){
+    var o=dias[d],barra="";
+    if(st.ruta==="all"){["01","02","04","05","xx"].forEach(function(k){var v=Math.max(0,o.rt[k]||0);if(v)barra+='<i style="width:'+(v/mx*100)+'%;background:'+COL[k]+'"></i>'})}
+    else barra='<i style="width:'+(Math.max(0,o.v)/mx*100)+'%;background:'+COL[st.ruta]+'"></i>';
+    var det='<div class="det">';
+    ["01","02","04","05","xx"].forEach(function(k){
+      var it=o.it.filter(function(x){return x.r===k});if(!it.length)return;
+      var sum=it.reduce(function(a,x){return a+(x.nc?-x.t:x.t)},0);
+      det+='<div><h3><span class="t"><span class="dot2" style="background:'+COL[k]+'"></span>'+etiquetaRuta(k)+'</span><span>'+peso(sum)+'</span></h3>'+
+        it.map(function(x){return '<div class="li"><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"Nota crédito ":"Factura ")+x.n+'</span><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"-":"")+peso(x.t)+'</span></div>'}).join("")+'</div>';
+    });
+    det+='</div>';
+    out+=filaDia(d,st.mes,'<span class="bar" style="background:none;display:flex;width:100%">'+barra+'</span>',peso(o.v),o.v<0,st.abierto===d,det);
+  });
+  document.getElementById("dias").innerHTML=out||'<p class="vacio">No hay facturas cargadas para esta selección.</p>';
+}
+
+function vistaPagado(){
+  var s=sumaPag(st.ruta);
+  document.getElementById("res").innerHTML='<div class="q">Pagado · '+etiquetaRuta(st.ruta)+' · '+PER[st.per][0].toLowerCase()+'</div><div class="big p">'+peso(s.p)+'</div><div class="d">'+s.c+' pagos de clientes</div>';
+  document.getElementById("tit-dias").textContent="Día por día · toque uno para ver quién pagó";
+  var dias={};
+  PAG.forEach(function(x){if(rangoOk(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={v:0,it:[]});o.v+=x.t;o.it.push(x)}});
+  var lista=Object.keys(dias).map(Number).sort(function(a,b){return a-b}),mx=1;
+  lista.forEach(function(d){mx=Math.max(mx,dias[d].v)});
+  var out="";
+  lista.forEach(function(d){
+    var o=dias[d];
+    var barra='<i style="width:'+(o.v/mx*100)+'%;background:var(--pag)"></i>';
+    var det='<div class="det"><div>'+o.it.map(function(x){return '<div class="li"><span><span class="dot2" style="background:'+COL[x.r]+'"></span> '+x.cli+(x.r==="pe"?' <span class="pend">sin ruta</span>':'')+'</span><span>'+peso(x.t)+'</span></div>'}).join("")+'</div></div>';
+    out+=filaDia(d,st.mes,barra,peso(o.v),false,st.abierto===d,det);
+  });
+  document.getElementById("dias").innerHTML=out||'<p class="vacio">No hay pagos cargados para esta selección.</p>';
+}
+
+function vistaCliente(){
+  var it=PAG.filter(function(x){return x.cli===st.cli}).sort(function(a,b){return a.mes<b.mes?1:a.mes>b.mes?-1:b.d-a.d});
+  var tot=it.reduce(function(a,x){return a+x.t},0),mx=1;it.forEach(function(x){mx=Math.max(mx,x.t)});
+  var r=it.length?it[0].r:"pe";
+  var ult=it.length?it[0].d+" de "+MESN[+it[0].mes.split("-")[1]-1]:"—";
+  document.getElementById("res").innerHTML='<div class="q">Cliente · '+(r==="pe"?'<span class="pend">sin ruta</span>':etiquetaRuta(r))+'</div><div class="big p" style="font-size:clamp(26px,8vw,38px)">'+st.cli+'</div><div class="big p">'+peso(tot)+'</div><div class="d">'+it.length+' pagos leídos · último pago: '+ult+'</div>';
+  document.getElementById("tit-dias").textContent="Fechas en que pagó";
+  document.getElementById("dias").innerHTML=it.map(function(x){
+    return '<div class="dia"><div class="row"><span class="n">'+x.d+' '+MESN[+x.mes.split("-")[1]-1].slice(0,3)+'<small>'+semDe(x.mes,x.d)+'</small></span><span class="bar"><i style="width:'+(x.t/mx*100)+'%;background:var(--pag)"></i></span><span class="v">'+peso(x.t)+'</span></div></div>'}).join("")||'<p class="vacio">Sin pagos leídos.</p>';
+}
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-v],[data-mes],[data-ruta],[data-per],[data-dia],[data-cli]");if(!b)return;
+  if(b.dataset.v){st.v=b.dataset.v;st.abierto=null;st.cli=null}
+  else if(b.dataset.mes){st.mes=b.dataset.mes;st.abierto=null}
+  else if(b.dataset.ruta){st.ruta=b.dataset.ruta;st.abierto=null;st.cli=null}
+  else if(b.dataset.per){st.per=+b.dataset.per;st.abierto=null}
+  else if(b.dataset.cli!==undefined){st.cli=b.dataset.cli||null;st.abierto=null}
+  else{var d=+b.dataset.dia;st.abierto=st.abierto===d?null:d}
+  render();
+});
+
+/* ---------- datos ---------- */
 function armarPagos(o){var mapa=o.mapa||{};PAG=o.pagos.split("|").map(function(s){var p=s.split(",");var f=p[0].split("/");var r=mapa[p[1]]||"pe";
   return {mes:"2026-"+("0"+f[1]).slice(-2),d:+f[0],r:r,cli:p[1],t:+p[2]};});}
 async function descifrar(clave){
@@ -146,89 +278,6 @@ async function descifrar(clave){
   var pt=await crypto.subtle.decrypt({name:"AES-CBC",iv:bits.slice(32,48)},key,data);
   return JSON.parse(new TextDecoder().decode(pt));
 }
-var MESES=[];
-var st={mes:null,ruta:"all",per:0,abierto:null};
-var CORTE="";
-
-function peso(n){return (n<0?"-":"")+"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");}
-function corto(n){var a=Math.abs(n);if(a>=1e6)return (n<0?"-":"")+"$"+(a/1e6).toLocaleString("es-CO",{maximumFractionDigits:1})+" M";return peso(n);}
-function nombreMes(k){var p=k.split("-");return MESN[+p[1]-1]+" "+p[0];}
-function sem(d){var p=st.mes.split("-");return SEM[new Date(+p[0],+p[1]-1,d).getDay()];}
-function enRango(x){var p=PER[st.per];return x.mes===st.mes&&x.d>=p[1]&&x.d<=p[2];}
-function resumen(ruta){
-  var o={f:0,nc:0,p:0};
-  FACT.forEach(function(x){if(enRango(x)&&(ruta==="all"||x.r===ruta)){if(x.nc)o.nc+=x.t;else o.f+=x.t}});
-  PAG.forEach(function(x){if(enRango(x)&&(ruta==="all"||x.r===ruta))o.p+=x.t});
-  return o;
-}
-
-function render(){
-  if(!st.mes){return}
-  var cab=nombreMes(st.mes);
-  document.getElementById("sub").textContent=cab.charAt(0).toUpperCase()+cab.slice(1)+" · datos al "+CORTE;
-  document.getElementById("bloque-mes").hidden=MESES.length<2;
-  document.getElementById("meses").innerHTML=MESES.map(function(k){return '<button class="btn" aria-pressed="'+(st.mes===k)+'" data-mes="'+k+'">'+nombreMes(k)+'</button>'}).join("");
-  document.getElementById("periodos").innerHTML=PER.map(function(p,i){return '<button class="btn" aria-pressed="'+(st.per===i)+'" data-per="'+i+'">'+p[0]+'</button>'}).join("");
-
-  /* tarjetas de ruta */
-  var h="",tt=resumen("all");
-  h+='<button class="rc todas" aria-pressed="'+(st.ruta==="all")+'" data-ruta="all"><span class="t">Todas las rutas</span><span class="m"><span>Facturado<b>'+corto(tt.f-tt.nc)+'</b></span><span class="p">Pagado<b>'+corto(tt.p)+'</b></span></span></button>';
-  RUTAS4.forEach(function(k){var r=resumen(k);
-    h+='<button class="rc" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="t"><span class="dot" style="background:'+COL[k]+'"></span>'+k+' '+NOM[k]+'</span><span class="m"><span>Facturado<b>'+corto(r.f-r.nc)+'</b></span><span class="p">Pagado<b>'+corto(r.p)+'</b></span></span></button>'});
-  document.getElementById("rutas").innerHTML=h;
-
-  /* resumen de la selección */
-  var s=resumen(st.ruta),neto=s.f-s.nc;
-  var nombre=st.ruta==="all"?"Todas las rutas":st.ruta+" "+NOM[st.ruta];
-  var extra="";
-  if(st.ruta==="all"){
-    var pe=0,ot=0;PAG.forEach(function(x){if(enRango(x)){if(x.r==="pe")pe+=x.t;if(x.r==="ot")ot+=x.t}});
-    if(pe)extra+='<div class="s"><span class="pend">'+peso(pe)+' pagados por clientes sin ruta</span></div>';
-    if(ot)extra+='<div class="s">'+peso(ot)+' de pagadores marcados como «otro»</div>';
-  }
-  document.getElementById("res").innerHTML='<h2>'+nombre+' · '+PER[st.per][0].toLowerCase()+'</h2>'+
-    '<div class="tiles"><div class="tile"><span class="k"><i style="background:var(--fact)"></i>Facturado</span><span class="v">'+peso(neto)+'</span><span class="s">'+(s.nc?peso(s.f)+' menos '+peso(s.nc)+' en notas crédito':'Facturas menos notas crédito')+'</span></div>'+
-    '<div class="tile"><span class="k"><i style="background:var(--pag)"></i>Pagado</span><span class="v" style="color:var(--pag)">'+peso(s.p)+'</span><span class="s">Pagos recibidos de clientes</span></div></div>'+
-    '<div class="dif"><span>Facturado menos pagado</span><b>'+peso(neto-s.p)+'</b></div>'+extra;
-
-  /* días */
-  var dias={};
-  FACT.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={f:0,p:0,fi:[],pi:[]});o.f+=x.nc?-x.t:x.t;o.fi.push(x)}});
-  PAG.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={f:0,p:0,fi:[],pi:[]});o.p+=x.t;o.pi.push(x)}});
-  var lista=Object.keys(dias).map(Number).sort(function(a,b){return a-b}),mx=1;
-  lista.forEach(function(d){mx=Math.max(mx,Math.abs(dias[d].f),dias[d].p)});
-  var out="";
-  lista.forEach(function(d){
-    var o=dias[d],ab=st.abierto===d;
-    out+='<div class="dia"><button data-dia="'+d+'" aria-expanded="'+ab+'"><span class="n">'+d+'<small>'+sem(d)+'</small></span>'+
-      '<span class="bars"><span class="bar f"><i style="width:'+(Math.max(0,o.f)/mx*100)+'%"></i></span><span class="bar p"><i style="width:'+(o.p/mx*100)+'%"></i></span></span>'+
-      '<span class="vals"><div class="f'+(o.f<0?" neg":"")+'">'+corto(o.f)+'</div><div class="p">'+corto(o.p)+'</div></span></button>';
-    if(ab){
-      out+='<div class="det">';
-      if(o.fi.length)out+='<div><h3>Facturas del día</h3>'+o.fi.slice().sort(function(a,b){return a.r<b.r?-1:a.r>b.r?1:b.t-a.t}).map(function(x){
-        return '<div class="li"><span class="r"><i style="background:'+COL[x.r]+'"></i><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"Nota crédito ":"Factura ")+x.n+'</span></span><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"-":"")+peso(x.t)+'</span></div>'}).join("")+'</div>';
-      if(o.pi.length)out+='<div><h3>Pagos del día</h3>'+o.pi.map(function(x){
-        return '<div class="li"><span class="r"><i style="background:'+COL[x.r]+'"></i>'+x.cli+(x.r==="pe"?' <span class="pend">sin ruta</span>':'')+'</span><span>'+peso(x.t)+'</span></div>'}).join("")+'</div>';
-      out+='</div>';
-    }
-    out+='</div>';
-  });
-  document.getElementById("dias").innerHTML=out||'<p class="vacio">No hay facturas ni pagos cargados para esta selección.</p>';
-
-  var pe2={};PAG.forEach(function(x){if(x.r==="pe")pe2[x.cli]=1});
-  document.getElementById("nota").textContent="Facturado: facturas electrónicas de Colanta del correo, la ruta sale de «Entregado a». Pagado: avisos de Bancolombia, la ruta es la que se marcó para cada cliente"+(Object.keys(pe2).length?" (sin ruta: "+Object.keys(pe2).join(", ")+")":"")+". Los pagos de abril a agosto y alguno de cada mes pueden faltar.";
-}
-
-document.addEventListener("click",function(e){
-  var b=e.target.closest("[data-mes],[data-ruta],[data-per],[data-dia]");if(!b)return;
-  if(b.dataset.mes){st.mes=b.dataset.mes;st.abierto=null}
-  else if(b.dataset.ruta){st.ruta=b.dataset.ruta;st.abierto=null}
-  else if(b.dataset.per){st.per=+b.dataset.per;st.abierto=null}
-  else{var d=+b.dataset.dia;st.abierto=st.abierto===d?null:d}
-  render();
-});
-
-/* ---------- lectura de las facturas desde la hoja publicada ---------- */
 function csv(t){var rows=[],row=[],cur="",q=false;for(var i=0;i<t.length;i++){var c=t[i];
   if(q){if(c=='"'){if(t[i+1]=='"'){cur+='"';i++}else q=false}else cur+=c}
   else if(c=='"')q=true;else if(c==","){row.push(cur);cur=""}else if(c=="\n"){row.push(cur);rows.push(row);row=[];cur=""}else if(c!="\r")cur+=c}
@@ -256,8 +305,7 @@ function cargar(clave){
 }
 var clave=null;
 try{var h=location.hash.match(/e=([\w\-]+)/);if(h){clave=h[1];localStorage.setItem("clave",clave);history.replaceState(null,"",location.pathname)}else clave=localStorage.getItem("clave")}catch(e){var h2=location.hash.match(/e=([\w\-]+)/);if(h2)clave=h2[1]}
-juntarMeses();render();
-if(!clave){document.getElementById("sub").textContent="Abra la página con el enlace completo para ver también lo facturado."}
+if(!clave){document.getElementById("sub").textContent="Abra la página con el enlace completo para ver los datos."}
 else{descifrar(clave).then(function(o){armarPagos(o);juntarMeses();render()}).catch(function(){});
   cargar(clave).catch(function(){document.getElementById("sub").textContent="No pude leer las facturas. Revise que la hoja siga publicada."});
   setInterval(function(){cargar(clave).catch(function(){})},300000);}
