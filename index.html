@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<base target="_top">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Facturación por ruta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F4F6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Colanta por ruta</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
+/* Concepto: una tarjeta por ruta que junta lo facturado y lo pagado; debajo, cada día con sus dos barras. */
 :root{
   --bg:#F2F4F6; --surface:#FFFFFF; --ink:#14212B; --muted:#5A6B78; --line:#DCE2E7; --soft:#E8EDF1;
-  --accent:#14212B; --accent-ink:#FFFFFF; --bad:#B4322A;
-  --r01:#2B6CB0; --r02:#238A6A; --r04:#C98A0A; --r05:#8458C4; --rxx:#7B8791;
+  --accent:#14212B; --accent-ink:#FFFFFF; --bad:#B4322A; --fact:#14212B; --pag:#1E7F5C;
+  --r01:#2B6CB0; --r02:#238A6A; --r04:#C98A0A; --r05:#8458C4; --rpe:#B4322A; --rot:#6B7782;
   --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
   --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
   color-scheme:light;
@@ -18,139 +20,205 @@
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#10171D; --surface:#18222A; --ink:#E7EDF1; --muted:#93A4B1; --line:#2A3943; --soft:#202D36;
-    --accent:#E7EDF1; --accent-ink:#10171D; --bad:#F0877F;
-    --r01:#6AA6E8; --r02:#4CC39B; --r04:#E8B54A; --r05:#B592EC; --rxx:#9AA7B1; color-scheme:dark;
+    --accent:#E7EDF1; --accent-ink:#10171D; --bad:#F0877F; --fact:#9DB4C6; --pag:#4CC39B;
+    --r01:#6AA6E8; --r02:#4CC39B; --r04:#E8B54A; --r05:#B592EC; --rpe:#F0877F; --rot:#9AA7B1; color-scheme:dark;
   }
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;
-  padding:22px 16px 48px}
-.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  padding-block:calc(18px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-h1{font-family:var(--display);font-size:32px;line-height:1.05;margin:0}
-.sub{color:var(--muted);margin:4px 0 0}
-.lbl{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:8px;display:block}
-.fila-botones{display:flex;flex-wrap:wrap;gap:8px}
-.btn{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;min-height:44px}
-.btn .dot{width:12px;height:12px;border-radius:50%}
+h1{font-family:var(--display);font-size:30px;line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;display:block}
+.fb{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;min-height:40px}
 .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.total{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
-.total .q{color:var(--muted);font-size:14px}
-.total .big{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,52px);line-height:1.05;margin:2px 0}
-.total .d{color:var(--muted);font-size:14px}
+
+/* tarjetas de ruta */
+.rutas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rc{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rc.todas{grid-column:1/-1}
+.rc[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.rc .t{display:flex;align-items:center;gap:8px;font-weight:600}
+.rc .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.rc .m{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rc .m b{color:var(--ink);font-size:15px;font-weight:600;display:block}
+.rc .m .p b{color:var(--pag)}
+
+/* resumen */
+.res{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.res h2{font-family:var(--display);font-size:20px;margin:0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.tile .k{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.tile .k i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tile .v{font-family:var(--display);font-weight:700;font-size:clamp(22px,6.5vw,30px);line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted)}
+.dif{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding-top:10px;font-size:14px;color:var(--muted)}
+.dif b{font-family:var(--display);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* días */
 .dias{display:flex;flex-direction:column;gap:8px}
 .dia{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.dia>button{width:100%;text-align:left;background:none;border:0;padding:12px 14px;display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:12px}
+.dia>button{width:100%;text-align:left;background:none;border:0;padding:10px 14px;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px}
 .dia .n{font-weight:600}
-.dia .n small{display:block;font-weight:400;color:var(--muted);font-size:12px;text-transform:uppercase}
-.barra{height:12px;border-radius:6px;background:var(--soft);display:flex;overflow:hidden}
-.barra i{display:block;height:100%}
-.dia .v{font-weight:600;font-variant-numeric:tabular-nums}
-.dia .v.neg{color:var(--bad)}
-.det{border-top:1px solid var(--line);padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
-.det h3{margin:0 0 4px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.det h3 span.t{display:inline-flex;align-items:center;gap:8px}
-.det h3 .dot{width:10px;height:10px;border-radius:50%}
-.det .f{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0;border-bottom:1px dotted var(--line);font-variant-numeric:tabular-nums}
-.det .f .nc{color:var(--bad)}
+.dia .n small{display:block;font-weight:400;color:var(--muted);font-size:11px;text-transform:uppercase}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{height:9px;border-radius:5px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px}
+.bar.f i{background:var(--fact)}
+.bar.p i{background:var(--pag)}
+.vals{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.5}
+.vals .f{color:var(--ink)}
+.vals .p{color:var(--pag);font-weight:600}
+.vals .neg{color:var(--bad)}
+.det{border-top:1px solid var(--line);padding:10px 14px 12px;background:var(--bg);display:flex;flex-direction:column;gap:12px}
+.det h3{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.li{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0;border-bottom:1px dotted var(--line);font-variant-numeric:tabular-nums}
+.li .nc{color:var(--bad)}
+.li .r{display:inline-flex;align-items:center;gap:6px}
+.li .r i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.pend{color:var(--bad);font-weight:600}
+.leg{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.leg i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px}
 .vacio{color:var(--muted);padding:14px 2px}
-.nota{font-size:13px;color:var(--muted)}
+.nota{font-size:12.5px;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Facturación por ruta</h1>
-    <p class="sub" id="sub"></p>
+    <h1>Colanta por ruta</h1>
+    <p class="sub" id="sub">Cargando datos…</p>
   </header>
 
-  <section id="bloque-mes" hidden>
+  <section id="bloque-mes">
     <span class="lbl">Mes</span>
-    <div class="fila-botones" id="meses"></div>
+    <div class="fb" id="meses"></div>
   </section>
 
   <section>
-    <span class="lbl">1. Elija la ruta</span>
-    <div class="fila-botones" id="rutas"></div>
+    <span class="lbl">1. Ruta</span>
+    <div class="rutas" id="rutas"></div>
   </section>
 
   <section>
-    <span class="lbl">2. Elija el periodo</span>
-    <div class="fila-botones" id="periodos"></div>
+    <span class="lbl">2. Periodo</span>
+    <div class="fb" id="periodos"></div>
   </section>
 
-  <section class="total" id="total" aria-live="polite"></section>
+  <section class="res" id="res" aria-live="polite"></section>
 
   <section>
-    <span class="lbl">3. Toque un día para ver sus facturas</span>
-    <div class="dias" id="dias"></div>
+    <span class="lbl">3. Día por día (toque uno para ver el detalle)</span>
+    <div class="leg"><span><i style="background:var(--fact)"></i>Facturado</span><span><i style="background:var(--pag)"></i>Pagado</span></div>
+    <div class="dias" id="dias" style="margin-top:8px"></div>
   </section>
 
   <p class="nota" id="nota"></p>
 </div>
 
 <script>
-/* Una factura o nota crédito por elemento: fecha,ruta,tipo (f factura, n nota crédito),número,total en pesos.
-   Los datos los pone el servidor en cada visita, leyendo la hoja de Google. */
-var CORTE="";
-var ROWS=[];
-var NOM={"01":"Filandia","02":"Salento","04":"Popular","05":"Centro","xx":"Sin ruta"};
-var COL={"01":"var(--r01)","02":"var(--r02)","04":"var(--r04)","05":"var(--r05)","xx":"var(--rxx)"};
-var ORDEN=["01","02","04","05"];
+/* Pagos y rutas de los clientes, cifrados. Solo se abren con la clave que va en el enlace. */
+var CIFRADO="U2FsdGVkX1+WG2wk7J2/VYmRrFrNYwKRcqMQh3TueWtvTsFZqa6Sp6HelgDXHhM4A9vJo73LUrvvs3/K1jtOOJFbySsk1VVWZceEspkMApNch+I9XJ2mE580HrmmT1b5Ix/NwzyFc71Qm7B4EtlKC6tIo8DU27I1bcUMcgpvbht/FPKA84d1Jai3STJwkrAwRxT2DF1HkFSCSsYJgyC1tmHPjGAgkeXeqCpwdHGKRaz410K3dunrVtm8kTwp0Nwbgl0QkksKCqRMEzY+lYUoRYq1d7ExPG6jJvN4nbpVXh7VaIXA9ngxGZ16LKURFYuBmJx2fj9A9P4QYjLScrV5gP11v5W1tJsj7519QQt7TpEt43z2m5s6EWajCS6qHCC6nDbew561DX9QFNaBjfbr12bXvtwI+wbpdJnn1a5XRlLfc4GfacMqP695RA4zJbj0a+cxjobKY7JYdZBLy1L1gTuo3b8/2jSXYzlK3KOQSe4FVHdYZlkT8dFHmSlgtV0sAP+DY87S/A3f7WOJA9xgS+gShwxzK9QDvSbE0R9dpTzPyIZMEekZJRbbsxkUDOdZnZ510OUFu00P32igXTgCgfcGLhNwjg4IE2rcqPqLRmlNw/bBfH8ESdlg50hYfTEBqaA5Su8jHK520UNykitJ3uWCpoNmsvz84KRaDVuNkfrRIK+DhuBID5bDrradM9nzwktNSzJ7EtVtxw5nE7n6lE5l3v6YttznqkTR1CJRBy7Ru1gsI8kPa/Rvy+/bf2A9+zoW/UjK8b3irKuUBHXHm4fzTvx7WCT4IhyKncagkGAKhtbWW8InWSbDjPGJVGF/WgcB6iFxpRYIE4ZjQj9zf3l7eOJHdgGSEijsDPcHwT2o1qZPcXbHKNeVZWXQwFI/X1dybQI13MyQvX8i6TbrdWmpujJzcJe3pd5EKCqt+eM2nXZA0KSolyIwECTAUKumMZezBEahwsQCEf2TDzX9zVKrWLoiIvmG/TpG4U5YaJ7imUsQdYI/64ZN6FEga5YXCyxTAYSuLWuSLqZE0ftfT7Uqs++JuaKXbcJpPr7fIMuLKaZ+Eh63vy9NZGyYDzFB6JjL2IX2/u1UNlN0kGV/sYw/Nak0lipsmDrxxVFYGOiq7f5pM/RCh1JPfsiVz17duwMwSdoX3cgJ/nqxLupcqblkUB/QuG1vg7tJMh/rYqhwBkM+2ZQQ9VUa+qsMJMbp5R1ja6WZodbNAB5hYOj9E8fGFAtPmawgdNIm2opek5C2GDw4w80UgjueRdRcte7e2SAN42L9fHAhp65Xct2vHtygN5QQaI17Db5X4xeHFw9se0wsQSW3GaxBa84mBiGvB+y1cOEyBPaAB81M75evUvliotY6y2kNK1TOBHVt9ikoRGXshOFDK00cWOape2nROQGOxFgwXS9EZVyCMWfZJAaLK3bV3Av5sZXyb0+eaMh4cGFIGxehg0NScNjD1+PjyyS0/FzTrpgFbEz7zcyTFoQOzwQ8CA/wuSNyliHvnpJcRpTZckwYAaJVngkTTL5ZCvT871xrnvejKpfqCoze4i2NJ4GPNEIcOaPaIIYTMVApaPy6P43IKcHmcquL2zdXiGB+wVkpl/8mBEvQKTbc7Q/jxfjDDoCRWrmWxpAIkSqJyC63LQJ3tqdLlQb621eYUuKDgbHVzdlU4I4gXq5tOTaYjwTz8rwd5vMuJWnx8O5WMQgMj5Jw226ZatUTmTXprHLe4eMaE3HmeSLwZrp+rfva8vT1ep8m4ZzzHuqmzvl8fSuk9mYwVsgbNPFXiNkZ3lmiDrSh4x1kEJMCavcUCNonb1+r9XfDeyirOy65OgLh+9LKF9ydouqgy4H+yDl16vOK0PZIUUZGKTf9i5g12hR8LGDsqgg16uC3w0iUplA=";
+
+var NOM={"01":"Filandia","02":"Salento","04":"Popular","05":"Centro","xx":"Sin ruta","pe":"Pendiente","ot":"Otro"};
+var COL={"01":"var(--r01)","02":"var(--r02)","04":"var(--r04)","05":"var(--r05)","xx":"var(--rpe)","pe":"var(--rpe)","ot":"var(--rot)"};
+var RUTAS4=["01","02","04","05"];
 var SEM=["dom","lun","mar","mié","jue","vie","sáb"];
 var MESN=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 var PER=[["Todo el mes",1,31],["Días 1 a 10",1,10],["Días 11 a 20",11,20],["Días 21 a 31",21,31]];
+
+var FACT=[];   /* facturas: {mes,d,r,nc,n,t} */
+var PAG=[];
+function armarPagos(o){var mapa=o.mapa||{};PAG=o.pagos.split("|").map(function(s){var p=s.split(",");var f=p[0].split("/");var r=mapa[p[1]]||"pe";
+  return {mes:"2026-"+("0"+f[1]).slice(-2),d:+f[0],r:r,cli:p[1],t:+p[2]};});}
+async function descifrar(clave){
+  var raw=Uint8Array.from(atob(CIFRADO),function(c){return c.charCodeAt(0)});
+  var salt=raw.slice(8,16),data=raw.slice(16);
+  var base=await crypto.subtle.importKey("raw",new TextEncoder().encode(clave),"PBKDF2",false,["deriveBits"]);
+  var bits=new Uint8Array(await crypto.subtle.deriveBits({name:"PBKDF2",salt:salt,iterations:100000,hash:"SHA-256"},base,384));
+  var key=await crypto.subtle.importKey("raw",bits.slice(0,32),"AES-CBC",false,["decrypt"]);
+  var pt=await crypto.subtle.decrypt({name:"AES-CBC",iv:bits.slice(32,48)},key,data);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
 var MESES=[];
 var st={mes:null,ruta:"all",per:0,abierto:null};
+var CORTE="";
 
 function peso(n){return (n<0?"-":"")+"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");}
+function corto(n){var a=Math.abs(n);if(a>=1e6)return (n<0?"-":"")+"$"+(a/1e6).toLocaleString("es-CO",{maximumFractionDigits:1})+" M";return peso(n);}
 function nombreMes(k){var p=k.split("-");return MESN[+p[1]-1]+" "+p[0];}
 function sem(d){var p=st.mes.split("-");return SEM[new Date(+p[0],+p[1]-1,d).getDay()];}
-function sel(){var p=PER[st.per];return ROWS.filter(function(x){return x.mes===st.mes&&x.d>=p[1]&&x.d<=p[2]&&(st.ruta==="all"||x.r===st.ruta)});}
+function enRango(x){var p=PER[st.per];return x.mes===st.mes&&x.d>=p[1]&&x.d<=p[2];}
+function resumen(ruta){
+  var o={f:0,nc:0,p:0};
+  FACT.forEach(function(x){if(enRango(x)&&(ruta==="all"||x.r===ruta)){if(x.nc)o.nc+=x.t;else o.f+=x.t}});
+  PAG.forEach(function(x){if(enRango(x)&&(ruta==="all"||x.r===ruta))o.p+=x.t});
+  return o;
+}
 
 function render(){
-  if(!MESES.length){document.getElementById("total").innerHTML='<div class="q">Todavía no hay facturas cargadas en la hoja.</div>';return;}
-  document.getElementById("sub").textContent=nombreMes(st.mes).replace(/^./,function(c){return c.toUpperCase()})+", datos al "+CORTE+".";
+  if(!st.mes){return}
+  var cab=nombreMes(st.mes);
+  document.getElementById("sub").textContent=cab.charAt(0).toUpperCase()+cab.slice(1)+" · datos al "+CORTE;
   document.getElementById("bloque-mes").hidden=MESES.length<2;
-  document.getElementById("meses").innerHTML=MESES.map(function(k){return '<button class="btn" aria-pressed="'+(st.mes===k)+'" data-mes="'+k+'">'+nombreMes(k)+'</button>';}).join("");
+  document.getElementById("meses").innerHTML=MESES.map(function(k){return '<button class="btn" aria-pressed="'+(st.mes===k)+'" data-mes="'+k+'">'+nombreMes(k)+'</button>'}).join("");
+  document.getElementById("periodos").innerHTML=PER.map(function(p,i){return '<button class="btn" aria-pressed="'+(st.per===i)+'" data-per="'+i+'">'+p[0]+'</button>'}).join("");
 
-  var h='<button class="btn" aria-pressed="'+(st.ruta==="all")+'" data-ruta="all">Todas</button>';
-  ORDEN.forEach(function(k){h+='<button class="btn" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="dot" style="background:'+COL[k]+'"></span>'+(k==="xx"?"":k+" ")+NOM[k]+'</button>';});
+  /* tarjetas de ruta */
+  var h="",tt=resumen("all");
+  h+='<button class="rc todas" aria-pressed="'+(st.ruta==="all")+'" data-ruta="all"><span class="t">Todas las rutas</span><span class="m"><span>Facturado<b>'+corto(tt.f-tt.nc)+'</b></span><span class="p">Pagado<b>'+corto(tt.p)+'</b></span></span></button>';
+  RUTAS4.forEach(function(k){var r=resumen(k);
+    h+='<button class="rc" aria-pressed="'+(st.ruta===k)+'" data-ruta="'+k+'"><span class="t"><span class="dot" style="background:'+COL[k]+'"></span>'+k+' '+NOM[k]+'</span><span class="m"><span>Facturado<b>'+corto(r.f-r.nc)+'</b></span><span class="p">Pagado<b>'+corto(r.p)+'</b></span></span></button>'});
   document.getElementById("rutas").innerHTML=h;
-  document.getElementById("periodos").innerHTML=PER.map(function(p,i){return '<button class="btn" aria-pressed="'+(st.per===i)+'" data-per="'+i+'">'+p[0]+'</button>';}).join("");
 
-  var rows=sel(),vf=0,vn=0,nf=0,nn=0,dias={};
-  rows.forEach(function(x){
-    if(x.nc){vn+=x.t;nn++}else{vf+=x.t;nf++}
-    var o=dias[x.d]||(dias[x.d]={d:x.d,v:0,rt:{},it:[]});
-    o.v+=x.nc?-x.t:x.t;o.rt[x.r]=(o.rt[x.r]||0)+(x.nc?-x.t:x.t);o.it.push(x);
-  });
-  var nombre=st.ruta==="all"?"todas las rutas":(st.ruta==="xx"?"facturas sin ruta":"la ruta "+st.ruta+" "+NOM[st.ruta]);
-  document.getElementById("total").innerHTML='<div class="q">Facturado en '+nombre+', '+PER[st.per][0].toLowerCase()+'</div><div class="big">'+peso(vf-vn)+'</div><div class="d">'+nf+' facturas'+(nn?' menos '+nn+' notas crédito ('+peso(vn)+')':'')+'</div>';
+  /* resumen de la selección */
+  var s=resumen(st.ruta),neto=s.f-s.nc;
+  var nombre=st.ruta==="all"?"Todas las rutas":st.ruta+" "+NOM[st.ruta];
+  var extra="";
+  if(st.ruta==="all"){
+    var pe=0,ot=0;PAG.forEach(function(x){if(enRango(x)){if(x.r==="pe")pe+=x.t;if(x.r==="ot")ot+=x.t}});
+    if(pe)extra+='<div class="s"><span class="pend">'+peso(pe)+' pagados por clientes sin ruta</span></div>';
+    if(ot)extra+='<div class="s">'+peso(ot)+' de pagadores marcados como «otro»</div>';
+  }
+  document.getElementById("res").innerHTML='<h2>'+nombre+' · '+PER[st.per][0].toLowerCase()+'</h2>'+
+    '<div class="tiles"><div class="tile"><span class="k"><i style="background:var(--fact)"></i>Facturado</span><span class="v">'+peso(neto)+'</span><span class="s">'+(s.nc?peso(s.f)+' menos '+peso(s.nc)+' en notas crédito':'Facturas menos notas crédito')+'</span></div>'+
+    '<div class="tile"><span class="k"><i style="background:var(--pag)"></i>Pagado</span><span class="v" style="color:var(--pag)">'+peso(s.p)+'</span><span class="s">Pagos recibidos de clientes</span></div></div>'+
+    '<div class="dif"><span>Facturado menos pagado</span><b>'+peso(neto-s.p)+'</b></div>'+extra;
 
+  /* días */
+  var dias={};
+  FACT.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={f:0,p:0,fi:[],pi:[]});o.f+=x.nc?-x.t:x.t;o.fi.push(x)}});
+  PAG.forEach(function(x){if(enRango(x)&&(st.ruta==="all"||x.r===st.ruta)){var o=dias[x.d]||(dias[x.d]={f:0,p:0,fi:[],pi:[]});o.p+=x.t;o.pi.push(x)}});
   var lista=Object.keys(dias).map(Number).sort(function(a,b){return a-b}),mx=1;
-  lista.forEach(function(d){mx=Math.max(mx,dias[d].v)});
+  lista.forEach(function(d){mx=Math.max(mx,Math.abs(dias[d].f),dias[d].p)});
   var out="";
   lista.forEach(function(d){
-    var o=dias[d],ab=st.abierto===d,barra="";
-    if(st.ruta==="all"){ORDEN.forEach(function(k){var v=Math.max(0,o.rt[k]||0);if(v)barra+='<i style="width:'+(v/mx*100)+'%;background:'+COL[k]+'"></i>'});}
-    else barra='<i style="width:'+(Math.max(0,o.v)/mx*100)+'%;background:'+COL[st.ruta]+'"></i>';
-    out+='<div class="dia"><button data-dia="'+d+'" aria-expanded="'+ab+'"><span class="n">'+d+'<small>'+sem(d)+'</small></span><span class="barra">'+barra+'</span><span class="v'+(o.v<0?" neg":"")+'">'+peso(o.v)+'</span></button>';
+    var o=dias[d],ab=st.abierto===d;
+    out+='<div class="dia"><button data-dia="'+d+'" aria-expanded="'+ab+'"><span class="n">'+d+'<small>'+sem(d)+'</small></span>'+
+      '<span class="bars"><span class="bar f"><i style="width:'+(Math.max(0,o.f)/mx*100)+'%"></i></span><span class="bar p"><i style="width:'+(o.p/mx*100)+'%"></i></span></span>'+
+      '<span class="vals"><div class="f'+(o.f<0?" neg":"")+'">'+corto(o.f)+'</div><div class="p">'+corto(o.p)+'</div></span></button>';
     if(ab){
       out+='<div class="det">';
-      ORDEN.forEach(function(k){
-        var it=o.it.filter(function(x){return x.r===k});if(!it.length)return;
-        var s=it.reduce(function(a,x){return a+(x.nc?-x.t:x.t)},0);
-        out+='<div><h3><span class="t"><span class="dot" style="background:'+COL[k]+'"></span>'+(k==="xx"?"":k+" ")+NOM[k]+'</span><span>'+peso(s)+'</span></h3>'+
-          it.map(function(x){return '<div class="f"><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"Nota crédito ":"Factura ")+x.n+'</span><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"-":"")+peso(x.t)+'</span></div>'}).join("")+'</div>';
-      });
+      if(o.fi.length)out+='<div><h3>Facturas del día</h3>'+o.fi.slice().sort(function(a,b){return a.r<b.r?-1:a.r>b.r?1:b.t-a.t}).map(function(x){
+        return '<div class="li"><span class="r"><i style="background:'+COL[x.r]+'"></i><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"Nota crédito ":"Factura ")+x.n+'</span></span><span class="'+(x.nc?"nc":"")+'">'+(x.nc?"-":"")+peso(x.t)+'</span></div>'}).join("")+'</div>';
+      if(o.pi.length)out+='<div><h3>Pagos del día</h3>'+o.pi.map(function(x){
+        return '<div class="li"><span class="r"><i style="background:'+COL[x.r]+'"></i>'+x.cli+(x.r==="pe"?' <span class="pend">sin ruta</span>':'')+'</span><span>'+peso(x.t)+'</span></div>'}).join("")+'</div>';
       out+='</div>';
     }
     out+='</div>';
   });
-  document.getElementById("dias").innerHTML=out||'<p class="vacio">No hay facturas cargadas para esta selección.</p>';
+  document.getElementById("dias").innerHTML=out||'<p class="vacio">No hay facturas ni pagos cargados para esta selección.</p>';
+
+  var pe2={};PAG.forEach(function(x){if(x.r==="pe")pe2[x.cli]=1});
+  document.getElementById("nota").textContent="Facturado: facturas electrónicas de Colanta del correo, la ruta sale de «Entregado a». Pagado: avisos de Bancolombia, la ruta es la que se marcó para cada cliente"+(Object.keys(pe2).length?" (sin ruta: "+Object.keys(pe2).join(", ")+")":"")+". Los pagos de abril a agosto y alguno de cada mes pueden faltar.";
 }
+
 document.addEventListener("click",function(e){
   var b=e.target.closest("[data-mes],[data-ruta],[data-per],[data-dia]");if(!b)return;
   if(b.dataset.mes){st.mes=b.dataset.mes;st.abierto=null}
@@ -159,9 +227,8 @@ document.addEventListener("click",function(e){
   else{var d=+b.dataset.dia;st.abierto=st.abierto===d?null:d}
   render();
 });
-document.getElementById("nota").textContent="Cada valor es el total a pagar de la factura electrónica de Colanta y la ruta sale del campo «Entregado a». Un día que no aparece no tiene facturas leídas del correo. La página se actualiza sola con la hoja.";
 
-/* ---- lectura de la hoja publicada ---- */
+/* ---------- lectura de las facturas desde la hoja publicada ---------- */
 function csv(t){var rows=[],row=[],cur="",q=false;for(var i=0;i<t.length;i++){var c=t[i];
   if(q){if(c=='"'){if(t[i+1]=='"'){cur+='"';i++}else q=false}else cur+=c}
   else if(c=='"')q=true;else if(c==","){row.push(cur);cur=""}else if(c=="\n"){row.push(cur);rows.push(row);row=[];cur=""}else if(c!="\r")cur+=c}
@@ -169,26 +236,30 @@ function csv(t){var rows=[],row=[],cur="",q=false;for(var i=0;i<t.length;i++){va
 function codigoRuta(s){s=(s||"").toUpperCase();if(/FILANDIA|FINLANDIA/.test(s))return"01";if(/SALENTO/.test(s))return"02";if(/POPULAR/.test(s))return"04";if(/CENTRO/.test(s))return"05";return"xx";}
 function fecha(s){s=(s||"").trim();var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return [m[1],m[2],m[3]];
   m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return [m[3],("0"+m[2]).slice(-2),("0"+m[1]).slice(-2)];return null;}
+function juntarMeses(){
+  var set={};FACT.forEach(function(x){set[x.mes]=1});PAG.forEach(function(x){set[x.mes]=1});
+  MESES=Object.keys(set).sort();
+  if(!st.mes||MESES.indexOf(st.mes)<0)st.mes=MESES[MESES.length-1];
+  var d=new Date();CORTE=d.getDate()+"/"+(d.getMonth()+1)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+}
 function cargar(clave){
   var url="https://docs.google.com/spreadsheets/d/e/"+clave+"/pub?gid=0&single=true&output=csv&t="+Date.now();
   return fetch(url).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}).then(function(t){
-    var seen={};ROWS=[];
+    var seen={};FACT=[];
     csv(t).slice(1).forEach(function(c){
       var f=fecha(c[1]),tot=Math.round(parseFloat(String(c[6]).replace(/[^0-9.\-]/g,"")));
       if(!c[0]||!f||!tot||seen[c[0]])return;seen[c[0]]=1;
-      ROWS.push({mes:f[0]+"-"+f[1],y:+f[0],m:+f[1],d:+f[2],r:codigoRuta(c[4]),nc:String(c[2]).trim()==="91",n:String(c[0]).replace(/^40111|^401(?=N)/,""),t:tot});
+      FACT.push({mes:f[0]+"-"+f[1],d:+f[2],r:codigoRuta(c[4]),nc:String(c[2]).trim()==="91",n:String(c[0]).replace(/^40111|^401(?=N)/,""),t:tot});
     });
-    MESES=[];ROWS.forEach(function(x){if(MESES.indexOf(x.mes)<0)MESES.push(x.mes)});MESES.sort();
-    if(ROWS.some(function(x){return x.r==="xx"})&&ORDEN.indexOf("xx")<0)ORDEN.push("xx");
-    if(!st.mes||MESES.indexOf(st.mes)<0)st.mes=MESES[MESES.length-1];
-    var d=new Date();CORTE=d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
-    render();
+    juntarMeses();render();
   });
 }
 var clave=null;
 try{var h=location.hash.match(/e=([\w\-]+)/);if(h){clave=h[1];localStorage.setItem("clave",clave);history.replaceState(null,"",location.pathname)}else clave=localStorage.getItem("clave")}catch(e){var h2=location.hash.match(/e=([\w\-]+)/);if(h2)clave=h2[1]}
-if(!clave){document.getElementById("total").innerHTML='<div class="q">Abra la página con el enlace completo que incluye la clave de los datos.</div>';}
-else{cargar(clave).catch(function(){document.getElementById("total").innerHTML='<div class="q">No pude leer los datos. Revise que la hoja siga publicada.</div>'});
+juntarMeses();render();
+if(!clave){document.getElementById("sub").textContent="Abra la página con el enlace completo para ver también lo facturado."}
+else{descifrar(clave).then(function(o){armarPagos(o);juntarMeses();render()}).catch(function(){});
+  cargar(clave).catch(function(){document.getElementById("sub").textContent="No pude leer las facturas. Revise que la hoja siga publicada."});
   setInterval(function(){cargar(clave).catch(function(){})},300000);}
 </script>
 </body>
