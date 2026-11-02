@@ -201,7 +201,7 @@ function mes3(k){return MESN[+k.split("-")[1]-1].slice(0,3);}
 function semDe(iso){var p=iso.split("-");return SEM[new Date(+p[0],+p[1]-1,+p[2]).getDay()];}
 function fechaCorta(iso){var p=iso.split("-");return +p[2]+" "+MESN[+p[1]-1].slice(0,3);}
 function enRango(x){return st.modo==="mes"?x.mes===st.mes:(x.iso>=st.a&&x.iso<=st.b);}
-var DISP={"01":"001","02":"002","04":"004","05":"005"};
+var DISP={"01":"001","04":"003","02":"004","05":"005"};   /* código real de la factura: 001 Filandia, 003 Popular, 004 Salento, 005 Centro */
 function etiquetaRuta(k){return k==="all"?"Todas las rutas":((k==="ot"||k==="xx")?NOM[k]:(DISP[k]||k)+" "+NOM[k]);}
 function periodoTxt(){
   if(st.modo==="mes")return mesTxt(st.mes);
@@ -231,7 +231,7 @@ function render(){
   /* rutas */
   var cliVer=st.v==="p"&&st.cli;
   document.getElementById("bloque-ruta").hidden=false;
-  var rutas=["01","02","04","05"];
+  var rutas=["01","04","02","05"];
   if(st.v==="f"){if(FACT.some(function(x){return x.r==="xx"}))rutas.push("xx")}
   else if(PAG.some(function(x){return x.r==="ot"}))rutas.push("ot");
   var h="";
@@ -282,11 +282,11 @@ function vistaFacturado(){
   var mx=1;Object.keys(dias).forEach(function(i){mx=Math.max(mx,dias[i].v)});
   var out=listaPorMes(dias,function(iso,o){
     var barra="";
-    if(st.ruta==="all"){["01","02","04","05","xx"].forEach(function(k){var v=Math.max(0,o.rt[k]||0);if(v)barra+='<i style="width:'+(v/mx*100)+'%;background:'+COL[k]+'"></i>'})}
+    if(st.ruta==="all"){["01","04","02","05","xx"].forEach(function(k){var v=Math.max(0,o.rt[k]||0);if(v)barra+='<i style="width:'+(v/mx*100)+'%;background:'+COL[k]+'"></i>'})}
     else barra='<i style="width:'+(Math.max(0,o.v)/mx*100)+'%;background:'+COL[st.ruta]+'"></i>';
     var ab=st.abierto===iso,det="";
     if(ab){det='<div class="det">';
-      ["01","02","04","05","xx"].forEach(function(k){
+      ["01","04","02","05","xx"].forEach(function(k){
         var it=o.it.filter(function(x){return x.r===k});if(!it.length)return;
         var sum=it.reduce(function(a,x){return a+(x.nc?-x.t:x.t)},0);
         det+='<div><h3><span class="t"><span class="dot2" style="background:'+COL[k]+'"></span>'+etiquetaRuta(k)+'</span><span>'+peso(sum)+'</span></h3>'+
