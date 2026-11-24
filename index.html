@@ -12,6 +12,11 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Colanta por ruta</title>
+<script>
+/* Si el celular guardó una versión vieja de la página, la cambia por la nueva al abrir. */
+var VERSION="2026-11-24b";
+(function(){try{fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/var VERSION="([^"]+)"/);if(m&&m[1]!==VERSION)location.replace(location.pathname+"?v="+m[1]+location.hash)}).catch(function(){})}catch(e){}})();
+</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Concepto: primero se elige cuándo (mes o fechas), después qué (Facturado o Pagado), luego la ruta y, en Pagado, el cliente. */
