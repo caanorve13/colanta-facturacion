@@ -174,8 +174,9 @@ main .wrap{gap:14px;padding-top:12px}
 .dia .cab .c{display:block;color:var(--muted);font-size:12px;text-align:right}
 .dia .det{display:block;padding:6px 14px 10px}
 .fin{text-align:center;color:var(--muted);font-size:13px;padding:6px 0}
-.pg{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;border:2px solid var(--muted)}
+.pg{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4px;margin-right:9px;background:transparent;border:2px solid var(--muted);vertical-align:-2px;flex:none;box-sizing:border-box}
 .pg.ok{background:var(--pag);border-color:var(--pag)}
+.pg.ok::after{content:"";width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .err{padding:40px 16px;text-align:center;color:var(--muted)}
 </style>
 </head><body>

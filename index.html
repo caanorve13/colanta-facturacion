@@ -111,8 +111,9 @@ main .wrap{padding-top:16px}
 .li{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:4px 0;border-bottom:1px dotted var(--line);font-variant-numeric:tabular-nums}
 .li .nc{color:var(--bad)}
 .vacio{color:var(--muted);padding:18px 2px;text-align:center}
-.pg{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:transparent;border:2px solid var(--muted);vertical-align:baseline;flex:none}
+.pg{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4px;margin-right:9px;background:transparent;border:2px solid var(--muted);vertical-align:-2px;flex:none;box-sizing:border-box}
 .pg.ok{background:var(--pag);border-color:var(--pag)}
+.pg.ok::after{content:"";width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .fp{margin-top:6px}
 .fp b{color:var(--ink)}
 .link{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;align-self:flex-start}
@@ -291,7 +292,7 @@ function render(){
 
   if(st.v==="f")vistaFacturado();else if(st.cli)vistaCliente();else vistaPagado();
 
-  document.getElementById("nota").textContent=(st.v==="f"&&Object.keys(PAGRUTA).length)?"● pagada a Colanta   ○ falta pagar. Solo en las rutas de las que llegan recibos de Tesorería.":"";
+  document.getElementById("nota").textContent=(st.v==="f"&&Object.keys(PAGRUTA).length)?"☑ pagada a Colanta   ☐ falta pagar. Solo en las rutas de las que llegan recibos de Tesorería.":"";
 }
 
 function nDia(iso){return +iso.split("-")[2]}
