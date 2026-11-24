@@ -13,7 +13,8 @@
 <title>Mi ruta</title>
 <script>
 /* Si el celular guardó una versión vieja de la página, la cambia por la nueva al abrir. */
-var VERSION="2026-11-24c";
+var VERSION="2026-11-24d";
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
 document.addEventListener("DOMContentLoaded",function(){var e=document.getElementById("ver");if(e)e.textContent="Versión "+VERSION+" · casillas ☑ ☐"});
 (function(){try{fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/var VERSION="([^"]+)"/);if(m&&m[1]!==VERSION)location.replace(location.pathname+"?v="+m[1]+location.hash)}).catch(function(){})}catch(e){}})();
 </script>
