@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F4F6">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +13,8 @@
 <title>Mi ruta</title>
 <script>
 /* Si el celular guardó una versión vieja de la página, la cambia por la nueva al abrir. */
-var VERSION="2026-11-24b";
+var VERSION="2026-11-24c";
+document.addEventListener("DOMContentLoaded",function(){var e=document.getElementById("ver");if(e)e.textContent="Versión "+VERSION+" · casillas ☑ ☐"});
 (function(){try{fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/var VERSION="([^"]+)"/);if(m&&m[1]!==VERSION)location.replace(location.pathname+"?v="+m[1]+location.hash)}).catch(function(){})}catch(e){}})();
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -190,6 +192,7 @@ main .wrap{gap:14px;padding-top:12px}
 <section class="res" id="res" aria-live="polite"></section>
 <section><span class="lbl">Últimos 5 días de despacho</span><div class="dias" id="dias" style="gap:8px;background:none;border:0"></div></section>
 <p class="fin" id="fin"></p>
+    <p class="nota" style="text-align:center;opacity:.7" id="ver"></p>
 </div></main>
 <script>
 var TOK={"01": "2ekw6mhkig", "04": "06rovqykcg", "02": "s50wlyv3xk", "05": "y1mhpv3vr4"};
