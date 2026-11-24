@@ -15,9 +15,8 @@
 <title>Colanta por ruta</title>
 <script>
 /* Si el celular guardó una versión vieja de la página, la cambia por la nueva al abrir. */
-var VERSION="2026-11-24d";
+var VERSION="2026-11-24e";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
-document.addEventListener("DOMContentLoaded",function(){var e=document.getElementById("ver");if(e)e.textContent="Versión "+VERSION+" · casillas ☑ ☐"});
 (function(){try{fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/var VERSION="([^"]+)"/);if(m&&m[1]!==VERSION)location.replace(location.pathname+"?v="+m[1]+location.hash)}).catch(function(){})}catch(e){}})();
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -220,7 +219,6 @@ main .wrap{gap:14px;padding-top:12px}
     </section>
 
     <p class="nota" id="nota"></p>
-    <p class="nota" style="text-align:center;opacity:.7" id="ver"></p>
     <button class="btn-notas" id="btn-notas">Notas crédito</button>
   </div>
 </main>
@@ -301,7 +299,7 @@ function render(){
 
   if(st.v==="f")vistaFacturado();else if(st.cli)vistaCliente();else vistaPagado();
 
-  document.getElementById("nota").textContent=(st.v==="f"&&Object.keys(PAGRUTA).length)?"☑ pagada a Colanta   ☐ falta pagar. Solo en las rutas de las que llegan recibos de Tesorería.":"";
+  document.getElementById("nota").textContent="";
 }
 
 function nDia(iso){return +iso.split("-")[2]}
